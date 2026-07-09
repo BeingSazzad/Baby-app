@@ -1,0 +1,875 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* System Constants */
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Global Color System */
+  --bg-app: #FAF9F7;
+  --bg-surface: #FFFFFF;
+  --color-border: #ECECEC;
+  --color-text-primary: #222222;
+  --color-text-secondary: #6E6E73;
+  --color-text-tertiary: #A1A1A5;
+  --color-shadow: rgba(142, 135, 128, 0.08);
+
+  /* Status Colors */
+  --color-success: #2BB673;
+  --color-warning: #F4B740;
+  --color-error: #E74C3C;
+  --color-info: #3EA8FF;
+
+  /* Feature Themes */
+  /* Mother (Pregnancy, Mother Dashboard, Profile, Daily Overview) */
+  --mother-primary: #F46B8A;
+  --mother-secondary: #FFD8E3;
+  --mother-gradient-start: #F46B8A;
+  --mother-gradient-end: #FFA8BD;
+
+  /* Baby (Baby Care, Feeding, Sleep, Growth, Health, Diaper, Trackers) */
+  --baby-primary: #53C88B;
+  --baby-secondary: #DDF8E9;
+  --baby-gradient-start: #53C88B;
+  --baby-gradient-end: #9AE6BE;
+
+  /* Development (Milestones, Activities, Brain, Learning, Achievements) */
+  --dev-primary: #F5A524;
+  --dev-secondary: #FFF2D7;
+  --dev-gradient-start: #F5A524;
+  --dev-gradient-end: #FFD48B;
+
+  /* Calendar (Appointments, Vaccination, Timeline, Events) */
+  --cal-primary: #5B8FF9;
+  --cal-secondary: #EAF1FF;
+  --cal-gradient-start: #5B8FF9;
+  --cal-gradient-end: #90B6FF;
+
+  /* Articles (Guides, Saved, Learning, Education) */
+  --article-primary: #8A6BFF;
+  --article-secondary: #F1EDFF;
+  --article-gradient-start: #8A6BFF;
+  --article-gradient-end: #B8A8FF;
+
+  /* Reminder (Urgent, Missed Tasks, Alert Badges) */
+  --reminder-primary: #FF6B6B;
+  --reminder-secondary: #FFE4E4;
+
+  /* Corner Radii */
+  --radius-screen: 40px;
+  --radius-card: 24px;
+  --radius-button: 20px;
+  --radius-pill: 100px;
+
+  /* Soft Shadows & Blurs */
+  --shadow-premium: 0 12px 32px var(--color-shadow);
+  --shadow-sm: 0 4px 12px var(--color-shadow);
+  --shadow-lg: 0 20px 48px rgba(142, 135, 128, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-blur: blur(20px);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: radial-gradient(circle at 10% 20%, rgb(242, 240, 237) 0%, rgb(238, 232, 226) 90%);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+/* Typography Utility */
+h1, h2, h3, h4, .display-font {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Main Workbench Interface Grid */
+.workbench-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  gap: 24px;
+  perspective: 1000px;
+}
+
+/* Controls at top of web browser page */
+.simulator-controls {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: var(--glass-blur);
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-premium);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  z-index: 100;
+}
+
+.simulator-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.simulator-btn.active {
+  background: var(--color-text-primary);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.simulator-btn:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-primary);
+}
+
+/* Dual Device Phone Frame Wrapper */
+.simulator-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Beautiful Mobile Device Frame Mockup */
+.phone-mockup {
+  position: relative;
+  width: 393px; /* Standard iPhone 15/16 size */
+  height: 852px;
+  background: #000000;
+  border-radius: 48px;
+  padding: 12px;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.1), inset 0 0 0 2px rgba(255,255,255,0.1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.phone-mockup.android {
+  border-radius: 40px;
+}
+
+/* Phone Bezel Interior screen container */
+.phone-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-app);
+  border-radius: 36px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+}
+
+.phone-mockup.android .phone-screen {
+  border-radius: 28px;
+}
+
+/* Phone Hardware Camera Overlays */
+/* Dynamic Island (iOS) */
+.ios-dynamic-island {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 30px;
+  background: #000000;
+  border-radius: 100px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  color: #FFF;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+/* Punch Hole (Android) */
+.android-punch-hole {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  background: #000000;
+  border-radius: 50%;
+  z-index: 1000;
+}
+
+/* Screen Status Bar */
+.phone-status-bar {
+  height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 24px 8px 24px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  z-index: 999;
+}
+
+.phone-status-bar.dark-text {
+  color: #FFFFFF;
+}
+
+.status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Interactive App Container */
+.app-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Scrollable screen body with hidden scrollbars for clean UI */
+.screen-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 90px; /* space for floating bottom tab bar */
+  scroll-behavior: smooth;
+}
+
+/* Hide webkit scrollbar */
+.screen-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom Navigation Bar (Floating, Round, Premium) */
+.floating-bottom-nav {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  height: 64px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border-radius: 32px;
+  box-shadow: var(--shadow-premium), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 900;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+
+.nav-tab-item.active {
+  color: var(--active-tab-color, var(--mother-primary));
+  transform: translateY(-2px);
+}
+
+.nav-tab-label {
+  font-size: 9px;
+  font-weight: 600;
+  margin-top: 2px;
+  font-family: var(--font-display);
+}
+
+/* Bottom Indicator line for iPhone */
+.home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  background: #000000;
+  border-radius: 100px;
+  z-index: 999;
+}
+
+.home-indicator.android {
+  width: 90px;
+  height: 4px;
+  bottom: 6px;
+  background: #444444;
+}
+
+/* Cards Design System */
+.premium-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-premium);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.premium-card.floating {
+  margin-bottom: 16px;
+}
+
+/* Specific module gradients & aesthetics */
+.card-mother {
+  background: linear-gradient(135deg, var(--mother-gradient-start) 0%, var(--mother-gradient-end) 100%);
+  color: #FFFFFF;
+  border: none;
+}
+
+.card-baby {
+  background: linear-gradient(135deg, var(--baby-gradient-start) 0%, var(--baby-gradient-end) 100%);
+  color: #FFFFFF;
+  border: none;
+}
+
+.card-development {
+  background: linear-gradient(135deg, var(--dev-gradient-start) 0%, var(--dev-gradient-end) 100%);
+  color: #FFFFFF;
+  border: none;
+}
+
+.card-calendar {
+  background: linear-gradient(135deg, var(--cal-gradient-start) 0%, var(--cal-gradient-end) 100%);
+  color: #FFFFFF;
+  border: none;
+}
+
+.card-articles {
+  background: linear-gradient(135deg, var(--article-gradient-start) 0%, var(--article-gradient-end) 100%);
+  color: #FFFFFF;
+  border: none;
+}
+
+/* Light Accent Cards */
+.accent-card-mother {
+  background-color: var(--mother-secondary);
+  border: 1px solid rgba(244, 107, 138, 0.15);
+  color: var(--color-text-primary);
+}
+
+.accent-card-baby {
+  background-color: var(--baby-secondary);
+  border: 1px solid rgba(83, 200, 139, 0.15);
+  color: var(--color-text-primary);
+}
+
+.accent-card-dev {
+  background-color: var(--dev-secondary);
+  border: 1px solid rgba(245, 165, 36, 0.15);
+  color: var(--color-text-primary);
+}
+
+.accent-card-cal {
+  background-color: var(--cal-secondary);
+  border: 1px solid rgba(91, 143, 249, 0.15);
+  color: var(--color-text-primary);
+}
+
+.accent-card-article {
+  background-color: var(--article-secondary);
+  border: 1px solid rgba(138, 107, 255, 0.15);
+  color: var(--color-text-primary);
+}
+
+.accent-card-reminder {
+  background-color: var(--reminder-secondary);
+  border: 1px solid rgba(255, 107, 107, 0.15);
+  color: var(--color-text-primary);
+}
+
+/* Premium Buttons */
+.btn-primary {
+  background: var(--theme-color, var(--mother-primary));
+  color: #FFFFFF;
+  border: none;
+  padding: 14px 28px;
+  border-radius: var(--radius-button);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 14px 28px;
+  border-radius: var(--radius-button);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.btn-secondary:active {
+  background: var(--bg-app);
+}
+
+.btn-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-premium);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-circle:active {
+  transform: scale(0.93);
+}
+
+/* Forms & Inputs */
+.input-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding-left: 4px;
+}
+
+.input-field {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.input-field:focus {
+  border-color: var(--theme-color, var(--mother-primary));
+  box-shadow: 0 0 0 4px rgba(244, 107, 138, 0.08);
+}
+
+/* Badges */
+.badge {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-display);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-mother { background-color: var(--mother-secondary); color: var(--mother-primary); }
+.badge-baby { background-color: var(--baby-secondary); color: var(--baby-primary); }
+.badge-dev { background-color: var(--dev-secondary); color: var(--dev-primary); }
+.badge-cal { background-color: var(--cal-secondary); color: var(--cal-primary); }
+.badge-article { background-color: var(--article-secondary); color: var(--article-primary); }
+.badge-reminder { background-color: var(--reminder-secondary); color: var(--reminder-primary); }
+
+/* Progress Indicators */
+.progress-ring-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.4s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Timeline Components */
+.timeline-container {
+  position: relative;
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background-color: var(--color-border);
+}
+
+.timeline-item {
+  position: relative;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -28px;
+  top: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+  border: 4px solid var(--theme-color, var(--mother-primary));
+  box-shadow: var(--shadow-sm);
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.timeline-dot.completed {
+  background-color: var(--theme-color, var(--mother-primary));
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes splashFade {
+  0% { opacity: 0; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop-in {
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-splash {
+  animation: splashFade 2s ease-in-out;
+}
+
+/* OTP Verification Blocks */
+.otp-input-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.otp-box {
+  width: 48px;
+  height: 56px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  transition: all 0.2s ease;
+}
+
+.otp-box.active {
+  border-color: var(--mother-primary);
+  box-shadow: 0 0 0 4px rgba(244, 107, 138, 0.08);
+}
+
+/* Custom Checkbox Design */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg-surface);
+  border-radius: 18px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checklist-item:active {
+  transform: scale(0.98);
+}
+
+.checklist-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.checklist-checkbox.checked {
+  background-color: var(--baby-primary);
+  border-color: var(--baby-primary);
+  color: #FFFFFF;
+}
+
+.checklist-item.checked {
+  opacity: 0.7;
+}
+
+/* Category grid container */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.category-card {
+  padding: 16px;
+  border-radius: 18px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border);
+}
+
+.category-card:active {
+  transform: scale(0.95);
+}
+
+.category-card.selected {
+  border-color: var(--theme-color);
+  background-color: var(--theme-secondary);
+}
+
+/* Modern Bottom Sheet Component */
+.bottom-sheet-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bottom-sheet {
+  background: var(--bg-surface);
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
+  width: 100%;
+  max-height: 85%;
+  overflow-y: auto;
+  padding: 24px;
+  padding-bottom: 40px;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 10px;
+  align-self: center;
+  margin-bottom: 4px;
+}
+
+/* Toggle Switch */
+.switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--mother-primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Dark mode configurations override inside phone screens */
+.phone-screen.dark-mode {
+  --bg-app: #121214;
+  --bg-surface: #1E1E22;
+  --color-border: #2D2D34;
+  --color-text-primary: #F2F2F7;
+  --color-text-secondary: #AEAEB2;
+  --color-text-tertiary: #636366;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(30, 30, 34, 0.85);
+}
+
+.phone-screen.dark-mode .floating-bottom-nav {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.phone-screen.dark-mode .input-field {
+  background: #2D2D34;
+}
+.phone-screen.dark-mode .checklist-item {
+  background: #1E1E22;
+}
+
+/* Responsive grid for workbench landing view */
+.workbench-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.workbench-title {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #222222;
+  margin-bottom: 8px;
+}
+
+.workbench-subtitle {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  color: #6E6E73;
+}
