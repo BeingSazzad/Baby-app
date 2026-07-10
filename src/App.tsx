@@ -24,11 +24,11 @@ import {
   HelpCircle,
   Eye,
   EyeOff,
-  PlusCircle,
   Clock,
   Activity,
   Award,
-  BookMarked
+  BookMarked,
+  LayoutGrid
 } from 'lucide-react';
 
 // Interfaces
@@ -46,6 +46,7 @@ interface ChecklistItem {
   time: string;
   completed: boolean;
   category: 'daily' | 'weekly' | 'monthly';
+  desc?: string;
 }
 
 interface CalendarEvent {
@@ -79,18 +80,18 @@ interface MilestoneItem {
 
 // Initial Data Seed
 const initialChecklist: ChecklistItem[] = [
-  { id: '1', task: 'Morning Feed', time: '08:00 AM', completed: true, category: 'daily' },
-  { id: '2', task: 'Vitamin D Drops', time: '09:00 AM', completed: false, category: 'daily' },
-  { id: '3', task: 'Tummy Time (15 mins)', time: '10:30 AM', completed: true, category: 'daily' },
-  { id: '4', task: 'Nap Time', time: '11:00 AM', completed: false, category: 'daily' },
-  { id: '5', task: 'Afternoon Feed', time: '02:00 PM', completed: false, category: 'daily' },
-  { id: '6', task: 'Evening Walk', time: '05:30 PM', completed: false, category: 'daily' },
-  { id: '7', task: 'Bath Time', time: '07:30 PM', completed: false, category: 'daily' },
-  { id: '8', task: 'Bedtime Feed & Sleep', time: '08:30 PM', completed: false, category: 'daily' },
-  { id: 'w1', task: 'Sterilize baby feeding equipment', time: 'Every Sunday', completed: false, category: 'weekly' },
-  { id: 'w2', task: 'Track height and weight metrics', time: 'Every Friday', completed: true, category: 'weekly' },
-  { id: 'm1', task: 'Wash all nursery bedding', time: '1st of Month', completed: false, category: 'monthly' },
-  { id: 'm2', task: 'Audit toys for age appropriateness', time: '15th of Month', completed: false, category: 'monthly' },
+  { id: '1', task: 'Morning Feed', time: '08:00 AM', completed: true, category: 'daily', desc: 'Next at 02:00 PM' },
+  { id: '2', task: 'Vitamin D Drops', time: '09:00 AM', completed: false, category: 'daily', desc: 'Give after breakfast' },
+  { id: '3', task: 'Tummy Time (15 mins)', time: '10:30 AM', completed: true, category: 'daily', desc: '15 minutes' },
+  { id: '4', task: 'Nap Time', time: '11:00 AM', completed: false, category: 'daily', desc: 'Ensure quiet environment' },
+  { id: '5', task: 'Afternoon Feed', time: '02:00 PM', completed: false, category: 'daily', desc: 'Breast milk or formula' },
+  { id: '6', task: 'Evening Walk', time: '05:30 PM', completed: false, category: 'daily', desc: 'Fresh air & sensory inputs' },
+  { id: '7', task: 'Bath Time', time: '07:30 PM', completed: false, category: 'daily', desc: 'Relaxing warm water bath' },
+  { id: '8', task: 'Bedtime Feed & Sleep', time: '08:30 PM', completed: false, category: 'daily', desc: 'Cozy swaddle & bedtime routine' },
+  { id: 'w1', task: 'Sterilize baby feeding equipment', time: 'Every Sunday', completed: false, category: 'weekly', desc: 'Clean and sterilize nursery gear' },
+  { id: 'w2', task: 'Track height and weight metrics', time: 'Every Friday', completed: true, category: 'weekly', desc: 'Measure weight and height growth' },
+  { id: 'm1', task: 'Wash all nursery bedding', time: '1st of Month', completed: false, category: 'monthly', desc: 'Keep sheets clean and fresh' },
+  { id: 'm2', task: 'Audit toys for age appropriateness', time: '15th of Month', completed: false, category: 'monthly', desc: 'Remove safety hazards and select age toys' },
 ];
 
 const initialCalendarEvents: CalendarEvent[] = [
@@ -154,6 +155,20 @@ const initialArticles: Article[] = [
   }
 ];
 
+// Helper to get dynamic category colors based on topic (UX dynamic styling)
+const getCategoryBadgeStyle = (category: string) => {
+  const cat = category.toLowerCase();
+  if (cat.includes('baby') || cat.includes('development') || cat.includes('care')) {
+    return { backgroundColor: 'var(--baby-secondary)', color: 'var(--baby-primary)' };
+  } else if (cat.includes('pregnancy') || cat.includes('sleep') || cat.includes('mother')) {
+    return { backgroundColor: 'var(--mother-secondary)', color: 'var(--mother-primary)' };
+  } else if (cat.includes('father') || cat.includes('partner') || cat.includes('parent')) {
+    return { backgroundColor: 'var(--cal-secondary)', color: 'var(--cal-primary)' };
+  } else {
+    return { backgroundColor: 'var(--article-secondary)', color: 'var(--article-primary)' };
+  }
+};
+
 export default function App() {
   // Simulator State
   const [deviceOS, setDeviceOS] = useState<'ios' | 'android'>('ios');
@@ -173,7 +188,8 @@ export default function App() {
 
   // User Profile States
   const [motherPhase, setMotherPhase] = useState<'pregnancy' | 'baby'>('baby');
-  const [pregnancyWeek, setPregnancyWeek] = useState(24);
+  const [selectedPhase, setSelectedPhase] = useState<string>(() => localStorage.getItem('bamudi_selected_phase') || 'early');
+  const [pregnancyWeek] = useState(24);
   const [interests, setInterests] = useState<string[]>(['feeding', 'sleep', 'growth', 'activities']);
   
   // Child States
@@ -204,7 +220,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialChecklist;
   });
 
-  const [milestones, setMilestones] = useState<MilestoneItem[]>(() => {
+  const [milestones] = useState<MilestoneItem[]>(() => {
     const saved = localStorage.getItem('bamudi_milestones');
     return saved ? JSON.parse(saved) : initialMilestones;
   });
@@ -243,7 +259,13 @@ export default function App() {
   const [newGrowthHeight, setNewGrowthHeight] = useState('');
 
   // Selected date in Calendar
-  const [selectedDate, setSelectedDate] = useState<string>('2026-07-09');
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
 
   // Article Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,6 +278,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('bamudi_dark_mode', String(isDarkMode));
   }, [isDarkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('bamudi_selected_phase', selectedPhase);
+  }, [selectedPhase]);
 
   useEffect(() => {
     localStorage.setItem('bamudi_children', JSON.stringify(children));
@@ -297,7 +323,13 @@ export default function App() {
   // Calculate age string
   const calculateBabyAge = (dobString: string) => {
     const dob = new Date(dobString);
-    const today = new Date('2026-07-09'); // Mocked system date matching metadata
+    const today = new Date();
+    
+    if (today < dob) {
+      const diffTime = dob.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return `Expected in ${diffDays} Days`;
+    }
     
     let months = (today.getFullYear() - dob.getFullYear()) * 12 + today.getMonth() - dob.getMonth();
     let days = today.getDate() - dob.getDate();
@@ -463,22 +495,6 @@ export default function App() {
     setShowAddGrowthModal(false);
   };
 
-  // Milestone Status Switch
-  const toggleMilestoneStatus = (id: string) => {
-    setMilestones(prev =>
-      prev.map(m => {
-        if (m.id === id) {
-          const nextStatus: Record<string, 'achieved' | 'in_progress' | 'upcoming'> = {
-            'upcoming': 'in_progress',
-            'in_progress': 'achieved',
-            'achieved': 'upcoming'
-          };
-          return { ...m, status: nextStatus[m.status] };
-        }
-        return m;
-      })
-    );
-  };
 
   // Toggle Save Article
   const toggleSaveArticle = (id: string) => {
@@ -576,7 +592,7 @@ export default function App() {
               {appFlow === 'splash' && (
                 <div className="screen-scroll-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', paddingBottom: '20px' }}>
                   <div className="animate-splash" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center' }}>
-                    <img src="/mother_baby.png" alt="Bamudi logo" style={{ width: '130px', height: '130px', objectFit: 'cover', borderRadius: '30px', boxShadow: 'var(--shadow-premium)', border: '4px solid #FFF' }} />
+                    {drawSplashLogo()}
                     <div>
                       <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', color: 'var(--color-text-primary)', fontWeight: '800' }}>Bamudi Kompass</h2>
                       <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px', marginTop: '6px', fontWeight: '500' }}>Your Parenting Compass & Guide</p>
@@ -877,44 +893,6 @@ export default function App() {
                       />
                     </div>
 
-                    <div className="input-group">
-                      <span className="input-label">Current Phase Selection</span>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button
-                          type="button"
-                          onClick={() => setMotherPhase('pregnancy')}
-                          className={`btn-secondary ${motherPhase === 'pregnancy' ? 'active' : ''}`}
-                          style={{ flex: 1, padding: '12px', display: 'flex', flexDirection: 'column', height: '70px', borderRadius: '18px', border: motherPhase === 'pregnancy' ? '2.5px solid var(--mother-primary)' : '1px solid var(--color-border)', background: motherPhase === 'pregnancy' ? 'var(--mother-secondary)' : '#FFF' }}
-                        >
-                          <Heart size={18} color="var(--mother-primary)" />
-                          <span style={{ fontSize: '13px', fontWeight: '700', marginTop: '4px' }}>Pregnancy</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMotherPhase('baby')}
-                          className={`btn-secondary ${motherPhase === 'baby' ? 'active' : ''}`}
-                          style={{ flex: 1, padding: '12px', display: 'flex', flexDirection: 'column', height: '70px', borderRadius: '18px', border: motherPhase === 'baby' ? '2.5px solid var(--mother-primary)' : '1px solid var(--color-border)', background: motherPhase === 'baby' ? 'var(--mother-secondary)' : '#FFF' }}
-                        >
-                          <Baby size={18} color="var(--mother-primary)" />
-                          <span style={{ fontSize: '13px', fontWeight: '700', marginTop: '4px' }}>Baby Care</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {motherPhase === 'pregnancy' && (
-                      <div className="input-group animate-fade-in">
-                        <span className="input-label">Pregnancy Week: {pregnancyWeek} Weeks</span>
-                        <input
-                          type="range"
-                          min="1"
-                          max="42"
-                          value={pregnancyWeek}
-                          onChange={(e) => setPregnancyWeek(parseInt(e.target.value))}
-                          style={{ width: '100%', accentColor: 'var(--mother-primary)' }}
-                        />
-                      </div>
-                    )}
-
                     <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}>
                       Next <ChevronRight size={18} />
                     </button>
@@ -959,7 +937,7 @@ export default function App() {
                           const name = e.target.value;
                           setChildren(prev => {
                             const next = [...prev];
-                            if (next[0]) next[0].name = name;
+                            if (next[activeChildIndex]) next[activeChildIndex].name = name;
                             return next;
                           });
                         }}
@@ -969,7 +947,9 @@ export default function App() {
                     </div>
 
                     <div className="input-group">
-                      <span className="input-label">Date of Birth</span>
+                      <span className="input-label">
+                        {currentBaby && currentBaby.dob && new Date(currentBaby.dob) > new Date() ? 'Expected Due Date' : 'Date of Birth'}
+                      </span>
                       <input
                         type="date"
                         className="input-field"
@@ -978,7 +958,7 @@ export default function App() {
                           const dob = e.target.value;
                           setChildren(prev => {
                             const next = [...prev];
-                            if (next[0]) next[0].dob = dob;
+                            if (next[activeChildIndex]) next[activeChildIndex].dob = dob;
                             return next;
                           });
                         }}
@@ -996,7 +976,7 @@ export default function App() {
                             onClick={() => {
                               setChildren(prev => {
                                 const next = [...prev];
-                                if (next[0]) next[0].gender = g;
+                                if (next[activeChildIndex]) next[activeChildIndex].gender = g;
                                 return next;
                               });
                             }}
@@ -1042,7 +1022,11 @@ export default function App() {
                     ].map((phase, idx) => (
                       <div
                         key={idx}
-                        onClick={() => setAppFlow('select_interests')}
+                        onClick={() => {
+                          setSelectedPhase(phase.label);
+                          setMotherPhase(phase.label === 'pregnancy' ? 'pregnancy' : 'baby');
+                          setAppFlow('select_interests');
+                        }}
                         className="premium-card"
                         style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', cursor: 'pointer', border: '1px solid var(--color-border)' }}
                       >
@@ -1166,19 +1150,18 @@ export default function App() {
                       currentBaby={currentBaby}
                       ageString={calculateBabyAge(currentBaby.dob)}
                       checklistPercent={checklistPercent}
-                      completedTasks={completedTasks}
-                      totalTasks={totalTasks}
                       checklist={checklist}
                       toggleChecklistItem={toggleChecklistItem}
                       milestones={milestones}
-                      toggleMilestoneStatus={toggleMilestoneStatus}
                       calendarEvents={calendarEvents}
                       articles={articles}
                       setActiveTab={setActiveTab}
                       setActiveArticle={setActiveArticle}
-                      children={children}
+                      childrenProfiles={children}
                       activeChildIndex={activeChildIndex}
                       setActiveChildIndex={setActiveChildIndex}
+                      motherPhase={motherPhase}
+                      pregnancyWeek={pregnancyWeek}
                     />
                   )}
 
@@ -1212,9 +1195,9 @@ export default function App() {
                     />
                   )}
 
-                  {/* Tab 5: Profile & Growth Tracker */}
+                  {/* Tab 5: More Sub-Navigation */}
                   {activeTab === 'profile' && (
-                    <ProfileModule
+                    <MoreModule
                       authName={authName}
                       currentBaby={currentBaby}
                       ageString={calculateBabyAge(currentBaby.dob)}
@@ -1224,6 +1207,8 @@ export default function App() {
                       language={language}
                       setLanguage={setLanguage}
                       handleLogout={handleLogout}
+                      calendarEvents={calendarEvents}
+                      setActiveTab={setActiveTab}
                     />
                   )}
 
@@ -1260,8 +1245,8 @@ export default function App() {
                       <span className="nav-tab-label">Articles</span>
                     </button>
                     <button className={`nav-tab-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
-                      <Settings size={20} />
-                      <span className="nav-tab-label">Settings</span>
+                      <LayoutGrid size={20} />
+                      <span className="nav-tab-label">More</span>
                     </button>
                   </div>
                 </>
@@ -1284,7 +1269,7 @@ export default function App() {
             <div className="bottom-sheet-handle"></div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="badge badge-article">{activeArticle.category}</span>
+              <span className="badge badge-article" style={getCategoryBadgeStyle(activeArticle.category)}>{activeArticle.category}</span>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   onClick={() => toggleSaveArticle(activeArticle.id)}
@@ -1599,55 +1584,87 @@ function DashboardModule({
   currentBaby,
   ageString,
   checklistPercent,
-  completedTasks,
-  totalTasks,
   checklist,
   toggleChecklistItem,
   milestones,
-  toggleMilestoneStatus,
   calendarEvents,
   articles,
   setActiveTab,
   setActiveArticle,
-  children,
+  childrenProfiles,
   activeChildIndex,
-  setActiveChildIndex
+  setActiveChildIndex,
+  motherPhase,
+  pregnancyWeek
 }: {
   authName: string;
   currentBaby: any;
   ageString: string;
   checklistPercent: number;
-  completedTasks: number;
-  totalTasks: number;
   checklist: ChecklistItem[];
   toggleChecklistItem: (id: string) => void;
   milestones: MilestoneItem[];
-  toggleMilestoneStatus: (id: string) => void;
   calendarEvents: CalendarEvent[];
   articles: Article[];
   setActiveTab: any;
   setActiveArticle: any;
-  children: any[];
+  childrenProfiles: any[];
   activeChildIndex: number;
   setActiveChildIndex: (idx: number) => void;
+  motherPhase: 'pregnancy' | 'baby';
+  pregnancyWeek: number;
 }) {
+  // Dynamic metrics calculations
+  const pendingTasksCount = checklist.filter(t => t.category === 'daily' && !t.completed).length;
+
+  const todayDateStr = (() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+  const todayEventsCount = calendarEvents.filter(e => e.date === todayDateStr).length;
+
+  const upcomingMilestonesCount = milestones.filter(m => m.status === 'upcoming' || m.status === 'in_progress').length;
+
+  const getBabyPhaseString = (dobString: string) => {
+    const dob = new Date(dobString);
+    const today = new Date();
+    let months = (today.getFullYear() - dob.getFullYear()) * 12 + today.getMonth() - dob.getMonth();
+    let days = today.getDate() - dob.getDate();
+    if (days < 0) {
+      months -= 1;
+    }
+    if (months < 0) return 'Pregnancy';
+    if (months < 1) return 'Newborn';
+    if (months < 6) return '0 - 6 Months';
+    return '6 - 18 Months';
+  };
+
   return (
     <div className="screen-scroll-container animate-fade-in">
       
-      {/* Header bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div>
-          <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Good Morning,</span>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', marginTop: '2px' }}>{authName} 💖</h2>
+      {/* 1. Header Section */}
+      <div className="home-header">
+        <div className="header-profile">
+          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--mother-secondary)', border: '2px solid #FFF', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <User size={20} color="var(--mother-primary)" />
+          </div>
+          <div className="header-welcome">
+            <span>Good Morning,</span>
+            <h2>{authName} 💖</h2>
+          </div>
         </div>
-        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--mother-secondary)', border: '2px solid #FFF', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <User size={20} color="var(--mother-primary)" />
-        </div>
+        <button className="header-notification">
+          <Bell size={20} />
+          <div className="notification-badge"></div>
+        </button>
       </div>
 
       {/* Multiple Children Profile Picker */}
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px' }}>
-        {children.map((child, idx) => (
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px' }}>
+        {childrenProfiles.map((child, idx) => (
           <button
             key={idx}
             type="button"
@@ -1667,142 +1684,121 @@ function DashboardModule({
         ))}
       </div>
 
-      {/* Mother pregnancy/mood card (Pink theme) */}
-      <div className="premium-card floating card-mother" style={{ minHeight: '120px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            <span className="badge badge-mother" style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: '#FFF' }}>Mother Overview</span>
-            <h3 style={{ fontSize: '18px', marginTop: '10px', fontWeight: '700' }}>Postpartum Recovery</h3>
-            <p style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px' }}>Day 148 of parenting companion</p>
+      {/* 2. Baby Card Combined / Pregnancy Progress Card */}
+      {motherPhase === 'pregnancy' ? (
+        <div className="baby-card-combined" style={{ background: 'linear-gradient(135deg, var(--mother-gradient-start) 0%, var(--mother-gradient-end) 100%)', border: 'none', color: '#FFFFFF' }}>
+          <div className="baby-card-left">
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={28} color="#FFFFFF" />
+            </div>
+            <div className="baby-card-info">
+              <span className="baby-card-name" style={{ color: '#FFFFFF' }}>Expected Baby</span>
+              <span className="baby-card-age" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                {(() => {
+                  const target = new Date(currentBaby.dob);
+                  const today = new Date();
+                  const diffTime = target.getTime() - today.getTime();
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays > 0 ? `Due in ${diffDays} days` : 'Due';
+                })()}
+              </span>
+            </div>
           </div>
-          <Sparkles size={24} color="#FFF" />
+          <div className="baby-card-right">
+            <span className="baby-card-phase-label" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Pregnancy</span>
+            <span className="baby-card-phase-val" style={{ color: '#FFFFFF' }}>Week {pregnancyWeek}</span>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-          <button style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', padding: '6px', borderRadius: '10px', fontSize: '11px', fontWeight: '700', color: '#FFF', cursor: 'pointer' }}>Log Mood</button>
-          <button style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: 'none', padding: '6px', borderRadius: '10px', fontSize: '11px', fontWeight: '700', color: '#FFF', cursor: 'pointer' }}>Vitals</button>
+      ) : (
+        <div className="baby-card-combined">
+          <div className="baby-card-left">
+            <img
+              src="/mother_baby.png"
+              alt="Baby avatar"
+              className="baby-card-avatar"
+            />
+            <div className="baby-card-info">
+              <span className="baby-card-name">{currentBaby.name}</span>
+              <span className="baby-card-age">{ageString}</span>
+            </div>
+          </div>
+          <div className="baby-card-right">
+            <span className="baby-card-phase-label">Current Phase</span>
+            <span className="baby-card-phase-val">{getBabyPhaseString(currentBaby.dob)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Today's Progress Horizontal Bar */}
+      <div className="progress-bar-section">
+        <div className="progress-bar-header">
+          <span className="progress-bar-title">Today's Progress</span>
+          <span className="progress-bar-percent">{checklistPercent}%</span>
+        </div>
+        <div className="progress-bar-track">
+          <div className="progress-bar-fill" style={{ width: `${checklistPercent}%` }}></div>
         </div>
       </div>
 
-      {/* Baby Status Card (Green theme) */}
-      <div className="premium-card floating card-baby">
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-          <img
-            src="/mother_baby.png"
-            alt="Baby avatar"
-            style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '50%', border: '2px solid rgba(255, 255, 255, 0.4)' }}
-          />
-          <div>
-            <h3 style={{ fontSize: '19px', fontWeight: '800' }}>{currentBaby.name}</h3>
-            <p style={{ fontSize: '13px', opacity: 0.9 }}>{ageString}</p>
+      {/* 4. Three Metrics Grid */}
+      <div className="metrics-grid">
+        <div className="metric-card tasks" onClick={() => setActiveTab('checklist')}>
+          <div className="metric-icon-wrapper">
+            <CheckSquare size={18} />
           </div>
+          <span className="metric-title">Tasks</span>
+          <span className="metric-value">{pendingTasksCount} Pending</span>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: '12px', fontSize: '12px' }}>
-          <div>
-            <span style={{ display: 'block', opacity: 0.8 }}>Weight</span>
-            <span style={{ fontWeight: '700', fontSize: '14px' }}>{currentBaby.weight} kg</span>
+        <div className="metric-card reminders" onClick={() => setActiveTab('calendar')}>
+          <div className="metric-icon-wrapper">
+            <Clock size={18} />
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <span style={{ display: 'block', opacity: 0.8 }}>Height</span>
-            <span style={{ fontWeight: '700', fontSize: '14px' }}>{currentBaby.height} cm</span>
+          <span className="metric-title">Reminders</span>
+          <span className="metric-value">{todayEventsCount} Today</span>
+        </div>
+
+        <div className="metric-card milestones" onClick={() => setActiveTab('profile')}>
+          <div className="metric-icon-wrapper">
+            <Award size={18} />
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ display: 'block', opacity: 0.8 }}>Status</span>
-            <span style={{ fontWeight: '700', fontSize: '14px' }}>Healthy</span>
-          </div>
+          <span className="metric-title">Milestones</span>
+          <span className="metric-value">{upcomingMilestonesCount} Active</span>
         </div>
       </div>
 
-      {/* Checklist Progress Ring & Summary */}
-      <div className="premium-card floating" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div className="progress-ring-container">
-          <svg width="60" height="60">
-            <circle cx="30" cy="30" r="26" stroke="var(--color-border)" strokeWidth="5" fill="transparent" />
-            <circle
-              className="progress-ring-circle"
-              cx="30"
-              cy="30"
-              r="26"
-              stroke="var(--baby-primary)"
-              strokeWidth="5"
-              fill="transparent"
-              strokeDasharray={`${2 * Math.PI * 26}`}
-              strokeDashoffset={`${2 * Math.PI * 26 * (1 - checklistPercent / 100)}`}
-            />
-          </svg>
-          <span style={{ position: 'absolute', fontSize: '12px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{checklistPercent}%</span>
+      {/* 5. Today's Top Tasks List */}
+      <div className="top-tasks-section">
+        <div className="top-tasks-header">
+          <span className="top-tasks-title">Today's Top Tasks</span>
+          <button className="top-tasks-viewall" onClick={() => setActiveTab('checklist')}>View All</button>
         </div>
-        <div style={{ flex: 1 }}>
-          <h4 style={{ fontSize: '15px', color: 'var(--color-text-primary)' }}>Checklist Progress</h4>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{completedTasks} of {totalTasks} daily tasks completed</p>
-        </div>
-        <button
-          onClick={() => setActiveTab('checklist')}
-          style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--baby-secondary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--baby-primary)', cursor: 'pointer' }}
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* Today's Tasks preview */}
-      <div style={{ margin: '14px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Today's Tasks</h3>
-          <button onClick={() => setActiveTab('checklist')} style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>View All</button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {checklist.filter(t => t.category === 'daily').slice(0, 3).map(task => (
-            <div key={task.id} className={`checklist-item ${task.completed ? 'checked' : ''}`} onClick={() => toggleChecklistItem(task.id)} style={{ padding: '12px' }}>
-              <div className={`checklist-checkbox ${task.completed ? 'checked' : ''}`}>
+            <div
+              key={task.id}
+              className={`task-item-premium ${task.completed ? 'completed' : ''}`}
+              onClick={() => toggleChecklistItem(task.id)}
+            >
+              <div className="task-check-circle">
                 {task.completed && <Check size={14} />}
               </div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '13.5px', fontWeight: '600', textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? 'var(--color-text-secondary)' : 'var(--color-text-primary)' }}>{task.task}</span>
-                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{task.time}</span>
+              <div className="task-details-wrapper">
+                <div className="task-main-info">
+                  <span className="task-name-text">{task.task}</span>
+                  <span className="task-desc-text">{task.desc || 'No details provided'}</span>
+                </div>
+                <span className="task-time-text">{task.time}</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Upcoming events preview */}
-      {calendarEvents.length > 0 && (
-        <div className="premium-card floating accent-card-cal" style={{ padding: '14px 18px', marginTop: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Calendar size={18} color="var(--cal-primary)" />
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--cal-primary)' }}>Upcoming Event</h4>
-          </div>
-          <div style={{ marginTop: '10px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700' }}>{calendarEvents[0].title}</h3>
-            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{calendarEvents[0].date} at {calendarEvents[0].time}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Milestones preview banner */}
-      {(() => {
-        const activeMilestone = milestones.find(m => m.status === 'in_progress') || milestones[0] || { id: 'm_m2', title: 'Rolls over', status: 'in_progress' };
-        return (
-          <div
-            onClick={() => toggleMilestoneStatus(activeMilestone.id)}
-            className="premium-card floating accent-card-dev"
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', cursor: 'pointer' }}
-          >
-            <Award size={22} color="var(--dev-primary)" />
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', color: 'var(--dev-primary)' }}>Active Milestone (Click to Cycle)</span>
-              <h4 style={{ fontSize: '14px', fontWeight: '700', marginTop: '1px' }}>{activeMilestone.title}</h4>
-            </div>
-            <span className="badge badge-dev" style={{ fontSize: '9px' }}>
-              {activeMilestone.status === 'in_progress' ? 'In Progress' : activeMilestone.status === 'achieved' ? 'Achieved' : 'Upcoming'}
-            </span>
-          </div>
-        );
-      })()}
-
       {/* Recommended Articles list */}
-      <div style={{ marginTop: '20px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '10px' }}>Articles For You</h3>
+      <div style={{ marginTop: '24px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '12px' }}>Articles For You</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {articles.slice(0, 2).map(art => (
             <div
@@ -1817,7 +1813,7 @@ function DashboardModule({
                 style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '12px' }}
               />
               <div style={{ flex: 1 }}>
-                <span className="badge badge-article" style={{ fontSize: '9px', padding: '3px 8px' }}>{art.category}</span>
+                <span className="badge badge-article" style={{ fontSize: '9px', padding: '3px 8px', ...getCategoryBadgeStyle(art.category) }}>{art.category}</span>
                 <h4 style={{ fontSize: '13px', fontWeight: '700', marginTop: '4px', lineHeight: '1.3' }}>{art.title}</h4>
                 <span style={{ fontSize: '10.5px', color: 'var(--color-text-secondary)', display: 'block', marginTop: '2px' }}>{art.readTime}</span>
               </div>
@@ -2159,7 +2155,7 @@ function ArticlesModule({
               />
               <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="badge badge-article">{art.category}</span>
+                  <span className="badge badge-article" style={getCategoryBadgeStyle(art.category)}>{art.category}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2190,8 +2186,8 @@ function ArticlesModule({
   );
 }
 
-// 6. PROFILE & SETTINGS MODULE
-function ProfileModule({
+// 6. MORE & PROFILE SUB-NAVIGATION MODULE
+function MoreModule({
   authName,
   currentBaby,
   ageString,
@@ -2200,7 +2196,9 @@ function ProfileModule({
   setIsDarkMode,
   language,
   setLanguage,
-  handleLogout
+  handleLogout,
+  calendarEvents,
+  setActiveTab
 }: {
   authName: string;
   currentBaby: any;
@@ -2211,124 +2209,319 @@ function ProfileModule({
   language: string;
   setLanguage: (val: string) => void;
   handleLogout: () => void;
+  calendarEvents: CalendarEvent[];
+  setActiveTab: any;
 }) {
-  const [activeProfileTab, setActiveProfileTab] = useState<'growth' | 'settings'>('growth');
+  const [activeSubView, setActiveSubView] = useState<'menu' | 'profile_info' | 'growth_tracker' | 'reminders' | 'settings' | 'invite_partner'>('menu');
+  const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head' | 'bmi'>('weight');
+  const [reminderFilterTab, setReminderFilterTab] = useState<'today' | 'tomorrow' | 'week'>('today');
+  const [partnerEmail, setPartnerEmail] = useState('');
+
+  const todayDateStr = (() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+
+  const tomorrowDateStr = (() => {
+    const tom = new Date();
+    tom.setDate(tom.getDate() + 1);
+    const yyyy = tom.getFullYear();
+    const mm = String(tom.getMonth() + 1).padStart(2, '0');
+    const dd = String(tom.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+
+  const filteredReminders = (() => {
+    if (reminderFilterTab === 'today') {
+      return calendarEvents.filter(e => e.date === todayDateStr);
+    } else if (reminderFilterTab === 'tomorrow') {
+      return calendarEvents.filter(e => e.date === tomorrowDateStr);
+    } else {
+      return calendarEvents.filter(e => e.date !== todayDateStr && e.date !== tomorrowDateStr);
+    }
+  })();
 
   return (
     <div className="screen-scroll-container animate-fade-in" style={{ '--theme-color': 'var(--baby-primary)' } as React.CSSProperties}>
       
-      {/* Hero Header */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '10px 0 20px 0' }}>
-        <img
-          src="/mother_baby.png"
-          alt="Baby avatar"
-          style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #FFF', boxShadow: 'var(--shadow-sm)' }}
-        />
-        <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{currentBaby.name}'s Profile</h2>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px' }}>{ageString}</p>
-        </div>
-      </div>
-
-      {/* Tab Selectors */}
-      <div style={{ display: 'flex', background: 'var(--color-border)', padding: '4px', borderRadius: '12px', marginBottom: '20px' }}>
+      {/* Back button for sub-views */}
+      {activeSubView !== 'menu' && (
         <button
-          onClick={() => setActiveProfileTab('growth')}
-          style={{
-            flex: 1,
-            border: 'none',
-            background: activeProfileTab === 'growth' ? '#FFFFFF' : 'transparent',
-            color: activeProfileTab === 'growth' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-            padding: '8px 0',
-            borderRadius: '9px',
-            fontWeight: '700',
-            fontSize: '13px',
-            cursor: 'pointer'
-          }}
+          onClick={() => setActiveSubView('menu')}
+          style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: '600', marginBottom: '14px', paddingLeft: '0' }}
         >
-          Growth Tracker
+          <ChevronLeft size={16} /> Back to More
         </button>
-        <button
-          onClick={() => setActiveProfileTab('settings')}
-          style={{
-            flex: 1,
-            border: 'none',
-            background: activeProfileTab === 'settings' ? '#FFFFFF' : 'transparent',
-            color: activeProfileTab === 'settings' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-            padding: '8px 0',
-            borderRadius: '9px',
-            fontWeight: '700',
-            fontSize: '13px',
-            cursor: 'pointer'
-          }}
-        >
-          App Settings
-        </button>
-      </div>
+      )}
 
-      {activeProfileTab === 'growth' ? (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
-          {/* Growth Curve Chart using Premium SVGs */}
-          <div className="premium-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '800' }}>Weight Curve (5 Months)</h4>
-              <button
-                onClick={() => setShowAddGrowthModal(true)}
-                style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer' }}
-              >
-                <PlusCircle size={14} /> Log Metrics
-              </button>
+      {/* VIEW 1: MENU LANDING */}
+      {activeSubView === 'menu' && (
+        <>
+          {/* Baby Card Summary */}
+          <div className="premium-card floating" style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '16px' }}>
+            <img
+              src="/mother_baby.png"
+              alt="Baby avatar"
+              style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #FFF', boxShadow: 'var(--shadow-sm)' }}
+            />
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--color-text-primary)' }}>{currentBaby.name}'s Profile</h3>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginTop: '2px' }}>{ageString}</p>
+            </div>
+            <button
+              onClick={() => setActiveSubView('profile_info')}
+              style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              View Profile
+            </button>
+          </div>
+
+          {/* Menu Grid */}
+          <div className="more-menu-grid">
+            <div className="more-menu-item" style={{ '--theme-color': 'var(--baby-primary)', '--theme-bg': 'var(--baby-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('profile_info')}>
+              <div className="more-menu-icon">
+                <User size={20} />
+              </div>
+              <span className="more-menu-title">Profile Info</span>
+              <span className="more-menu-desc">Baby profile, birth record, personal info</span>
             </div>
 
-            {/* Custom SVG Growth curve chart */}
-            <div style={{ width: '100%', height: '150px', background: 'var(--bg-app)', borderRadius: '14px', padding: '10px', position: 'relative' }}>
-              <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
-                {/* Horizontal Guide lines */}
-                <line x1="0" y1="90" x2="300" y2="90" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="4 4" />
-                <line x1="0" y1="50" x2="300" y2="50" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="4 4" />
-                
-                {/* Simulated standard deviation percentile band */}
-                <path d="M 0 110 Q 75 75 150 50 T 300 25 L 300 45 Q 225 70 150 85 T 0 120 Z" fill="rgba(83, 200, 139, 0.1)" />
-
-                {/* Ayaan's Growth Path */}
-                <path d="M 0 100 Q 75 70 150 46 T 300 15" stroke="var(--baby-primary)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-                
-                {/* Growth data points */}
-                <circle cx="0" cy="100" r="4" fill="var(--baby-primary)" />
-                <circle cx="75" cy="70" r="4" fill="var(--baby-primary)" />
-                <circle cx="150" cy="46" r="4" fill="var(--baby-primary)" />
-                <circle cx="300" cy="15" r="5" fill="var(--baby-primary)" />
-              </svg>
-              {/* Tooltip detail */}
-              <div style={{ position: 'absolute', top: '10px', right: '14px', background: 'var(--baby-primary)', color: '#FFF', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>
-                Latest: {currentBaby.weight} kg
+            <div className="more-menu-item" style={{ '--theme-color': 'var(--dev-primary)', '--theme-bg': 'var(--dev-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('growth_tracker')}>
+              <div className="more-menu-icon">
+                <TrendingUp size={20} />
               </div>
+              <span className="more-menu-title">Growth</span>
+              <span className="more-menu-desc">Track weight, height & growth percentiles</span>
+            </div>
+
+            <div className="more-menu-item" style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('reminders')}>
+              <div className="more-menu-icon">
+                <Clock size={20} />
+              </div>
+              <span className="more-menu-title">Reminders</span>
+              <span className="more-menu-desc">Diaper logs, vitamin alerts, checkups</span>
+            </div>
+
+            <div className="more-menu-item" style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('invite_partner')}>
+              <div className="more-menu-icon">
+                <Share2 size={20} />
+              </div>
+              <span className="more-menu-title">Invite Partner</span>
+              <span className="more-menu-desc">Track vaccine and growth together</span>
+            </div>
+
+            <div className="more-menu-item" style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('settings')}>
+              <div className="more-menu-icon">
+                <Settings size={20} />
+              </div>
+              <span className="more-menu-title">Settings</span>
+              <span className="more-menu-desc">Dark mode theme, language, FAQs</span>
+            </div>
+
+            <div className="more-menu-item" style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties} onClick={() => setActiveTab('articles')}>
+              <div className="more-menu-icon">
+                <BookOpen size={20} />
+              </div>
+              <span className="more-menu-title">Guides & Tips</span>
+              <span className="more-menu-desc">Baby sleep, feeding, self-care guides</span>
+            </div>
+          </div>
+
+          <button onClick={handleLogout} className="btn-secondary" style={{ color: 'var(--reminder-primary)', borderColor: 'var(--reminder-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '24px', borderRadius: '16px' }}>
+            <LogOut size={16} /> Logout Account
+          </button>
+        </>
+      )}
+
+      {/* VIEW 2: PROFILE INFO */}
+      {activeSubView === 'profile_info' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Profile Information</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)' }}>
+              <span style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Baby Name</span>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{currentBaby.name}</span>
+            </div>
+            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)' }}>
+              <span style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Gender</span>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{currentBaby.gender}</span>
+            </div>
+            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Date of Birth</span>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{currentBaby.dob}</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden', marginTop: '10px' }}>
+            {['Medical Information', 'Photos & Memories', 'Nursery Notes'].map((item, idx) => (
+              <div
+                key={idx}
+                onClick={() => alert(`${item} log simulated!`)}
+                style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: idx < 2 ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }}
+              >
+                <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>{item}</span>
+                <ChevronRight size={16} color="var(--color-text-secondary)" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 3: GROWTH TRACKER */}
+      {activeSubView === 'growth_tracker' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Growth Tracker</h2>
+            <button
+              onClick={() => setShowAddGrowthModal(true)}
+              className="badge"
+              style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+            >
+              <Plus size={12} /> Log Metric
+            </button>
+          </div>
+
+          {/* Metric Selector Tabs */}
+          <div className="growth-tabs">
+            {(['weight', 'height', 'head', 'bmi'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setGrowthMetricTab(tab)}
+                className={`growth-tab-btn ${growthMetricTab === tab ? 'active' : ''}`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* SVG Graph container */}
+          <div className="growth-chart-container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>
+                {growthMetricTab === 'weight' ? 'Weight Curve (kg)' : growthMetricTab === 'height' ? 'Height Curve (cm)' : growthMetricTab === 'head' ? 'Head Circ. (cm)' : 'BMI curve'}
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: '700' }}>
+                Latest: {growthMetricTab === 'weight' ? `${currentBaby.weight} kg` : growthMetricTab === 'height' ? `${currentBaby.height} cm` : 'Normal'}
+              </span>
+            </div>
+
+            <div style={{ width: '100%', height: '140px', background: 'var(--bg-app)', borderRadius: '14px', padding: '10px', position: 'relative' }}>
+              <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
+                <line x1="0" y1="80" x2="300" y2="80" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
+                <line x1="0" y1="40" x2="300" y2="40" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
+                <path d="M 0 110 Q 75 80 150 55 T 300 30 L 300 50 Q 225 75 150 90 T 0 120 Z" fill="rgba(83, 200, 139, 0.1)" />
+                <path d="M 0 102 Q 75 72 150 48 T 300 20" stroke="var(--baby-primary)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+                <circle cx="0" cy="102" r="4" fill="var(--baby-primary)" />
+                <circle cx="75" cy="72" r="4" fill="var(--baby-primary)" />
+                <circle cx="150" cy="48" r="4" fill="var(--baby-primary)" />
+                <circle cx="300" cy="20" r="5" fill="var(--baby-primary)" />
+              </svg>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '8px', padding: '0 4px' }}>
               <span>Month 1</span><span>Month 2</span><span>Month 3</span><span>Month 5 (Now)</span>
             </div>
           </div>
 
-          {/* Core Growth Statistics */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-            <div className="premium-card" style={{ padding: '14px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Weight Status</span>
-              <h3 style={{ fontSize: '20px', fontWeight: '800', marginTop: '4px', color: 'var(--baby-primary)' }}>{currentBaby.weight} kg</h3>
-              <p style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>+0.4 kg from last month</p>
-            </div>
-            <div className="premium-card" style={{ padding: '14px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Height Status</span>
-              <h3 style={{ fontSize: '20px', fontWeight: '800', marginTop: '4px', color: 'var(--baby-primary)' }}>{currentBaby.height} cm</h3>
-              <p style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>Percentile 74%</p>
+          {/* Metric list Table */}
+          <div style={{ marginTop: '10px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Log History</h4>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+              <table className="growth-history-table">
+                <thead>
+                  <tr>
+                    <th>Age</th>
+                    <th>{growthMetricTab.toUpperCase()}</th>
+                    <th>Percentile</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Month 5 (Today)</td>
+                    <td>{growthMetricTab === 'weight' ? `${currentBaby.weight} kg` : growthMetricTab === 'height' ? `${currentBaby.height} cm` : '38.5 cm'}</td>
+                    <td>74%</td>
+                  </tr>
+                  <tr>
+                    <td>Month 3</td>
+                    <td>{growthMetricTab === 'weight' ? '4.8 kg' : growthMetricTab === 'height' ? '57 cm' : '36.8 cm'}</td>
+                    <td>70%</td>
+                  </tr>
+                  <tr>
+                    <td>Month 2</td>
+                    <td>{growthMetricTab === 'weight' ? '4.1 kg' : growthMetricTab === 'height' ? '54 cm' : '35.5 cm'}</td>
+                    <td>68%</td>
+                  </tr>
+                  <tr>
+                    <td>Month 1</td>
+                    <td>{growthMetricTab === 'weight' ? '3.2 kg' : growthMetricTab === 'height' ? '51 cm' : '34.2 cm'}</td>
+                    <td>65%</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-
         </div>
-      ) : (
+      )}
+
+      {/* VIEW 4: REMINDERS LIST */}
+      {activeSubView === 'reminders' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Reminders</h2>
+
+          <div className="reminder-filters">
+            {(['today', 'tomorrow', 'week'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setReminderFilterTab(tab)}
+                className={`reminder-filter-btn ${reminderFilterTab === tab ? 'active' : ''}`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {filteredReminders.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 10px', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                <Clock size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
+                <p style={{ fontSize: '13px' }}>No reminders scheduled for this period.</p>
+              </div>
+            ) : (
+              filteredReminders.map(event => (
+                <div key={event.id} className="reminder-card-row">
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: event.type === 'vaccination' ? 'var(--cal-secondary)' : event.type === 'appointment' ? 'var(--mother-secondary)' : 'var(--baby-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: event.type === 'vaccination' ? 'var(--cal-primary)' : event.type === 'appointment' ? 'var(--mother-primary)' : 'var(--baby-primary)',
+                  }}>
+                    {event.type === 'vaccination' ? <Award size={18} /> : event.type === 'appointment' ? <Activity size={18} /> : <Clock size={18} />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{event.title}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>{event.time}</span>
+                    </div>
+                    <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{event.date}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 5: SETTINGS */}
+      {activeSubView === 'settings' && (
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>App Settings</h2>
           
-          {/* Settings List */}
           <div className="switch-container">
             <span style={{ fontSize: '14px', fontWeight: '700' }}>Dark Mode Theme</span>
             <label className="switch">
@@ -2341,7 +2534,7 @@ function ProfileModule({
             Mother Account: <strong style={{ color: 'var(--color-text-primary)' }}>{authName}</strong>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
             <div
               onClick={() => setLanguage(language === 'English' ? 'Danish' : 'English')}
               style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
@@ -2359,7 +2552,7 @@ function ProfileModule({
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}>
               <span style={{ fontSize: '13.5px', fontWeight: '600' }}>Help Center & FAQ</span>
               <HelpCircle size={16} color="var(--color-text-secondary)" />
@@ -2369,11 +2562,61 @@ function ProfileModule({
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
           </div>
+        </div>
+      )}
 
-          <button onClick={handleLogout} className="btn-secondary" style={{ color: 'var(--reminder-primary)', borderColor: 'var(--reminder-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
-            <LogOut size={16} /> Logout Account
+      {/* VIEW 6: INVITE PARTNER */}
+      {activeSubView === 'invite_partner' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Invite Co-Parent</h2>
+
+          <div className="partner-invite-banner">
+            <span className="partner-invite-title">Invite Ahmad (Father)</span>
+            <p className="partner-invite-desc">
+              Connect accounts to track tasks, share milestones, and log growth metrics together!
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Co-Parent Benefits:</span>
+            {[
+              'View tasks & checkmarks in real-time',
+              'Log growth tracking charts jointly',
+              'Stay synchronized on vaccine alerts',
+              'Work together as a cohesive care team'
+            ].map((benefit, index) => (
+              <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12.5px', color: 'var(--color-text-secondary)' }}>
+                <Check size={14} color="var(--color-success)" />
+                <span>{benefit}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="input-group" style={{ marginTop: '10px' }}>
+            <span className="input-label">Partner's Email or Mobile Number</span>
+            <input
+              type="text"
+              className="input-field"
+              value={partnerEmail}
+              onChange={(e) => setPartnerEmail(e.target.value)}
+              placeholder="ahmad@email.com"
+            />
+          </div>
+
+          <button
+            onClick={() => {
+              if (!partnerEmail) {
+                alert('Please enter an email address first!');
+                return;
+              }
+              alert(`Invitation successfully sent to ${partnerEmail}!`);
+              setPartnerEmail('');
+              setActiveSubView('menu');
+            }}
+            className="partner-invite-btn"
+          >
+            Send Invitation
           </button>
-
         </div>
       )}
 
