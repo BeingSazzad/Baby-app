@@ -27,16 +27,38 @@ import {
   Clock,
   Activity,
   Award,
-  BookMarked
+  BookMarked,
+  Key,
+  Trash
 } from 'lucide-react';
 
 // Interfaces
+interface GrowthLog {
+  id: string;
+  age: string;
+  weight: number;
+  height: number;
+  head: number;
+  date: string;
+}
+
+interface VaccineItem {
+  name: string;
+  date: string;
+  status: 'administered' | 'pending';
+}
+
 interface ChildProfile {
   name: string;
   dob: string;
   gender: string;
   weight: number;
   height: number;
+  head?: number;
+  growthLogs: GrowthLog[];
+  vaccineSchedule: VaccineItem[];
+  milestones?: MilestoneItem[];
+  checklist?: ChecklistItem[];
 }
 
 interface ChecklistItem {
@@ -67,6 +89,7 @@ interface Article {
   content: string;
   date: string;
   saved?: boolean;
+  read?: boolean;
 }
 
 interface MilestoneItem {
@@ -75,6 +98,7 @@ interface MilestoneItem {
   category: 'motor' | 'communication' | 'cognitive';
   status: 'achieved' | 'in_progress' | 'upcoming';
   desc: string;
+  dueMonth: number;
 }
 
 // Initial Data Seed
@@ -83,10 +107,7 @@ const initialChecklist: ChecklistItem[] = [
   { id: '2', task: 'Vitamin D Drops', time: '09:00 AM', completed: false, category: 'daily', desc: 'Give after breakfast' },
   { id: '3', task: 'Tummy Time (15 mins)', time: '10:30 AM', completed: true, category: 'daily', desc: '15 minutes' },
   { id: '4', task: 'Nap Time', time: '11:00 AM', completed: false, category: 'daily', desc: 'Ensure quiet environment' },
-  { id: '5', task: 'Afternoon Feed', time: '02:00 PM', completed: false, category: 'daily', desc: 'Breast milk or formula' },
-  { id: '6', task: 'Evening Walk', time: '05:30 PM', completed: false, category: 'daily', desc: 'Fresh air & sensory inputs' },
-  { id: '7', task: 'Bath Time', time: '07:30 PM', completed: false, category: 'daily', desc: 'Relaxing warm water bath' },
-  { id: '8', task: 'Bedtime Feed & Sleep', time: '08:30 PM', completed: false, category: 'daily', desc: 'Cozy swaddle & bedtime routine' },
+  { id: '5', task: 'Evening Bath Routine', time: '06:00 PM', completed: false, category: 'daily', desc: 'Bedtime transition' },
   { id: 'w1', task: 'Sterilize baby feeding equipment', time: 'Every Sunday', completed: false, category: 'weekly', desc: 'Clean and sterilize nursery gear' },
   { id: 'w2', task: 'Track height and weight metrics', time: 'Every Friday', completed: true, category: 'weekly', desc: 'Measure weight and height growth' },
   { id: 'm1', task: 'Wash all nursery bedding', time: '1st of Month', completed: false, category: 'monthly', desc: 'Keep sheets clean and fresh' },
@@ -101,14 +122,14 @@ const initialCalendarEvents: CalendarEvent[] = [
 ];
 
 const initialMilestones: MilestoneItem[] = [
-  { id: 'm_m1', title: 'Holds head steady', category: 'motor', status: 'achieved', desc: 'Holds head upright and steady without support when held in sitting position.' },
-  { id: 'm_m2', title: 'Rolls over', category: 'motor', status: 'in_progress', desc: 'Rolls over from tummy to back or vice versa. Usually starts around 4-5 months.' },
-  { id: 'm_m3', title: 'Sits without support', category: 'motor', status: 'upcoming', desc: 'Sits independently with back straight and hands free for play. Expected around 6-7 months.' },
-  { id: 'm_c1', title: 'Smiles socially', category: 'communication', status: 'achieved', desc: 'Spontaneously smiles back at mother and family members to initiate interaction.' },
-  { id: 'm_c2', title: 'Laughs out loud', category: 'communication', status: 'in_progress', desc: 'Giggles or laughs when tickled, played peek-a-boo, or showing funny faces.' },
-  { id: 'm_c3', title: 'Babbles consonants', category: 'communication', status: 'upcoming', desc: 'Makes repetitive consonant sounds like "ba-ba", "da-da", "ma-ma".' },
-  { id: 'm_cog1', title: 'Tracks objects visually', category: 'cognitive', status: 'achieved', desc: 'Follows colorful moving toys smoothly from left to right.' },
-  { id: 'm_cog2', title: 'Reaches for toys', category: 'cognitive', status: 'in_progress', desc: 'Stretches hand out intentionally to grab rattles or dangling crib charms.' },
+  { id: 'm_m1', title: 'Holds head steady', category: 'motor', status: 'achieved', desc: 'Holds head upright and steady without support when held in sitting position.', dueMonth: 2 },
+  { id: 'm_m2', title: 'Rolls over', category: 'motor', status: 'in_progress', desc: 'Rolls over from tummy to back or vice versa. Usually starts around 4-5 months.', dueMonth: 4 },
+  { id: 'm_m3', title: 'Sits without support', category: 'motor', status: 'upcoming', desc: 'Sits independently with back straight and hands free for play. Expected around 6-7 months.', dueMonth: 6 },
+  { id: 'm_c1', title: 'Smiles socially', category: 'communication', status: 'achieved', desc: 'Spontaneously smiles back at mother and family members to initiate interaction.', dueMonth: 2 },
+  { id: 'm_c2', title: 'Laughs out loud', category: 'communication', status: 'in_progress', desc: 'Giggles or laughs when tickled, played peek-a-boo, or showing funny faces.', dueMonth: 4 },
+  { id: 'm_c3', title: 'Babbles consonants', category: 'communication', status: 'upcoming', desc: 'Makes repetitive consonant sounds like "ba-ba", "da-da", "ma-ma".', dueMonth: 6 },
+  { id: 'm_cog1', title: 'Tracks objects visually', category: 'cognitive', status: 'achieved', desc: 'Follows colorful moving toys smoothly from left to right.', dueMonth: 2 },
+  { id: 'm_cog2', title: 'Reaches for toys', category: 'cognitive', status: 'in_progress', desc: 'Stretches hand out intentionally to grab rattles or dangling crib charms.', dueMonth: 4 },
 ];
 
 const initialArticles: Article[] = [
@@ -168,6 +189,78 @@ const getCategoryBadgeStyle = (category: string) => {
   }
 };
 
+// Calculate age in months as raw number
+const calculateAgeInMonths = (dobString: string): number => {
+  const dob = new Date(dobString);
+  const today = new Date();
+  if (today < dob) return 0;
+  let months = (today.getFullYear() - dob.getFullYear()) * 12 + today.getMonth() - dob.getMonth();
+  if (today.getDate() - dob.getDate() < 0) {
+    months -= 1;
+  }
+  return months >= 0 ? months : 0;
+};
+
+// Dynamic baby checkup reminders based on DOB (days after birth)
+const getBabyCalendarEvents = (baby: ChildProfile): CalendarEvent[] => {
+  const birth = new Date(baby.dob);
+  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  
+  // 2-Month checkup (60 days)
+  const d60 = new Date(birth.getTime() + 60 * 24 * 60 * 60 * 1000);
+  // 4-Month checkup (120 days)
+  const d120 = new Date(birth.getTime() + 120 * 24 * 60 * 60 * 1000);
+  // 6-Month checkup (180 days)
+  const d180 = new Date(birth.getTime() + 180 * 24 * 60 * 60 * 1000);
+  
+  return [
+    {
+      id: 'dynamic_e1',
+      title: '2-Month Wellness & Vaccine Visit',
+      time: '10:00 AM',
+      date: formatDate(d60),
+      type: 'vaccination',
+      desc: 'Checkup milestone: BCG booster and pediatrician general health check.'
+    },
+    {
+      id: 'dynamic_e2',
+      title: '4-Month Growth & Vaccine Visit',
+      time: '11:30 AM',
+      date: formatDate(d120),
+      type: 'vaccination',
+      desc: 'Checkup milestone: Polio booster and weight tracker check.'
+    },
+    {
+      id: 'dynamic_e3',
+      title: '6-Month Pediatric Checkup',
+      time: '09:00 AM',
+      date: formatDate(d180),
+      type: 'appointment',
+      desc: 'Important half-year checkup: Pediatric consultation on starting solid foods.'
+    }
+  ];
+};
+
+const getCombinedCalendarEvents = (baby: ChildProfile, customEvents: CalendarEvent[]): CalendarEvent[] => {
+  return [...getBabyCalendarEvents(baby), ...customEvents];
+};
+
+const getBabyMilestones = (baby: ChildProfile): MilestoneItem[] => {
+  if (baby.milestones && baby.milestones.length > 0) {
+    return baby.milestones;
+  }
+  const ageInMonths = calculateAgeInMonths(baby.dob);
+  return initialMilestones.map(m => {
+    let status: 'achieved' | 'in_progress' | 'upcoming' = 'upcoming';
+    if (m.dueMonth < ageInMonths) {
+      status = 'achieved';
+    } else if (m.dueMonth === ageInMonths || m.dueMonth === ageInMonths + 1) {
+      status = 'in_progress';
+    }
+    return { ...m, status };
+  });
+};
+
 export default function App() {
   // Simulator State
   const [deviceOS, setDeviceOS] = useState<'ios' | 'android'>('ios');
@@ -200,14 +293,42 @@ export default function App() {
         dob: '2026-02-12',
         gender: 'Boy',
         weight: 5.6,
-        height: 62
+        height: 62,
+        head: 38.5,
+        growthLogs: [
+          { id: '1', age: 'Month 1', weight: 3.2, height: 51, head: 34.2, date: '2026-03-12' },
+          { id: '2', age: 'Month 2', weight: 4.1, height: 54, head: 35.5, date: '2026-04-12' },
+          { id: '3', age: 'Month 3', weight: 4.8, height: 57, head: 36.8, date: '2026-05-12' },
+          { id: '4', age: 'Month 5 (Now)', weight: 5.6, height: 62, head: 38.5, date: '2026-07-12' }
+        ],
+        vaccineSchedule: [
+          { name: 'BCG (Tuberculosis)', date: 'Given: 2026-02-12', status: 'administered' },
+          { name: 'HepB Dose 1 & 2', date: 'Given: 2026-03-01', status: 'administered' },
+          { name: 'Rotavirus Dose 1', date: 'Given: 2026-04-10', status: 'administered' },
+          { name: 'DTaP-IPV-Hib Dose 1', date: 'Due: 2026-07-20', status: 'pending' },
+          { name: 'PCV Dose 1', date: 'Due: 2026-07-22', status: 'pending' }
+        ]
       },
       {
         name: 'Sophia',
         dob: '2025-09-18',
         gender: 'Girl',
         weight: 8.2,
-        height: 71
+        height: 71,
+        head: 42.5,
+        growthLogs: [
+          { id: '1', age: 'Month 1', weight: 3.4, height: 52, head: 34.8, date: '2025-10-18' },
+          { id: '2', age: 'Month 2', weight: 4.5, height: 56, head: 36.2, date: '2025-11-18' },
+          { id: '3', age: 'Month 3', weight: 5.2, height: 60, head: 37.8, date: '2025-12-18' },
+          { id: '4', age: 'Month 5 (Now)', weight: 8.2, height: 71, head: 42.5, date: '2026-02-18' }
+        ],
+        vaccineSchedule: [
+          { name: 'BCG (Tuberculosis)', date: 'Given: 2025-09-18', status: 'administered' },
+          { name: 'HepB Dose 1 & 2', date: 'Given: 2025-10-10', status: 'administered' },
+          { name: 'Rotavirus Dose 1', date: 'Given: 2025-11-15', status: 'administered' },
+          { name: 'DTaP-IPV-Hib Dose 1', date: 'Given: 2026-01-20', status: 'administered' },
+          { name: 'PCV Dose 1', date: 'Given: 2026-01-22', status: 'administered' }
+        ]
       }
     ];
   });
@@ -219,10 +340,49 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialChecklist;
   });
 
-  const [milestones] = useState<MilestoneItem[]>(() => {
-    const saved = localStorage.getItem('bamudi_milestones');
-    return saved ? JSON.parse(saved) : initialMilestones;
+  // Synchronize checklist state with active baby's checklist profile
+  useEffect(() => {
+    const activeBaby = children[activeChildIndex];
+    if (activeBaby) {
+      if (activeBaby.checklist && activeBaby.checklist.length > 0) {
+        setChecklist(activeBaby.checklist);
+      } else {
+        setChecklist(initialChecklist);
+      }
+    }
+  }, [activeChildIndex]);
+
+  useEffect(() => {
+    if (children.length > 0 && children[activeChildIndex]) {
+      const activeBaby = children[activeChildIndex];
+      if (JSON.stringify(activeBaby.checklist) !== JSON.stringify(checklist)) {
+        const updatedChildren = children.map((c, i) =>
+          i === activeChildIndex ? { ...c, checklist: checklist } : c
+        );
+        setChildren(updatedChildren);
+        localStorage.setItem('bamudi_children', JSON.stringify(updatedChildren));
+      }
+    }
+  }, [checklist, activeChildIndex]);
+
+  const [profileSubView, setProfileSubView] = useState<string>(() => localStorage.getItem('bamudi_profile_subview') || 'menu');
+
+  useEffect(() => {
+    localStorage.setItem('bamudi_profile_subview', profileSubView);
+  }, [profileSubView]);
+
+  const [pediatrician, setPediatrician] = useState(() => {
+    const saved = localStorage.getItem('bamudi_pediatrician');
+    return saved ? JSON.parse(saved) : { name: 'Dr. Emily Watson, MD', clinic: "St. Mary's Children Clinic", phone: '+15550199' };
   });
+
+  useEffect(() => {
+    localStorage.setItem('bamudi_profile_subview', profileSubView);
+  }, [profileSubView]);
+
+  useEffect(() => {
+    localStorage.setItem('bamudi_pediatrician', JSON.stringify(pediatrician));
+  }, [pediatrician]);
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => {
     const saved = localStorage.getItem('bamudi_calendar');
@@ -235,7 +395,7 @@ export default function App() {
   });
 
   // Active Tab in Dashboard
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'checklist' | 'calendar' | 'articles' | 'profile'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'checklist' | 'calendar' | 'milestones' | 'profile'>('dashboard');
 
   // Bottom sheets / Modals
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
@@ -263,6 +423,7 @@ export default function App() {
 
   const [newGrowthWeight, setNewGrowthWeight] = useState('');
   const [newGrowthHeight, setNewGrowthHeight] = useState('');
+  const [newGrowthHead, setNewGrowthHead] = useState('');
 
   // Selected date in Calendar
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -297,9 +458,7 @@ export default function App() {
     localStorage.setItem('bamudi_checklist', JSON.stringify(checklist));
   }, [checklist]);
 
-  useEffect(() => {
-    localStorage.setItem('bamudi_milestones', JSON.stringify(milestones));
-  }, [milestones]);
+
 
   useEffect(() => {
     localStorage.setItem('bamudi_calendar', JSON.stringify(calendarEvents));
@@ -348,6 +507,8 @@ export default function App() {
     
     return `${months} Months, ${days} Days`;
   };
+
+
 
   // Custom SVG Illustration Drawers
   const drawSplashLogo = () => (
@@ -442,6 +603,15 @@ export default function App() {
       )
     );
   };
+  // Delete checklist item
+  const deleteChecklistItem = (id: string) => {
+    setChecklist(prev => prev.filter(item => item.id !== id));
+  };
+
+  // Delete calendar event
+  const deleteCalendarEvent = (id: string) => {
+    setCalendarEvents(prev => prev.filter(e => e.id !== id));
+  };
 
   // Add Custom Task
   const handleAddNewTask = (e: React.FormEvent) => {
@@ -482,15 +652,30 @@ export default function App() {
     e.preventDefault();
     const w = parseFloat(newGrowthWeight);
     const h = parseFloat(newGrowthHeight);
-    if (isNaN(w) || isNaN(h)) return;
+    const hc = parseFloat(newGrowthHead);
+    if (isNaN(w) || isNaN(h) || isNaN(hc)) return;
 
     setChildren(prev => {
       const copy = [...prev];
       if (copy[activeChildIndex]) {
+        const dob = copy[activeChildIndex].dob;
+        const months = Math.max(1, Math.round((Date.now() - new Date(dob).getTime()) / (1000 * 60 * 60 * 24 * 30.4)));
+        const ageLabel = `Month ${months} (Today)`;
+        const newLog: GrowthLog = {
+          id: String(Date.now()),
+          age: ageLabel,
+          weight: w,
+          height: h,
+          head: hc,
+          date: new Date().toISOString().split('T')[0]
+        };
+
         copy[activeChildIndex] = {
           ...copy[activeChildIndex],
           weight: w,
-          height: h
+          height: h,
+          head: hc,
+          growthLogs: [...(copy[activeChildIndex].growthLogs || []), newLog]
         };
       }
       return copy;
@@ -498,6 +683,7 @@ export default function App() {
 
     setNewGrowthWeight('');
     setNewGrowthHeight('');
+    setNewGrowthHead('');
     setShowAddGrowthModal(false);
   };
 
@@ -512,6 +698,27 @@ export default function App() {
     if (activeArticle && activeArticle.id === id) {
       setActiveArticle(prev => prev ? { ...prev, saved: !prev.saved } : null);
     }
+  };
+
+  // Toggle Read Article
+  const toggleReadArticle = (id: string) => {
+    setArticles(prev =>
+      prev.map(a =>
+        a.id === id ? { ...a, read: !a.read } : a
+      )
+    );
+    if (activeArticle && activeArticle.id === id) {
+      setActiveArticle(prev => prev ? { ...prev, read: !prev.read } : null);
+    }
+  };
+
+  const handleOpenArticle = (art: Article) => {
+    setActiveArticle(art);
+    setArticles(prev =>
+      prev.map(a =>
+        a.id === art.id ? { ...a, read: true } : a
+      )
+    );
   };
 
   // Reset demo account
@@ -1147,83 +1354,166 @@ export default function App() {
               {/* FLOW 13: CORE DASHBOARD TABS AND MAIN PANELS */}
               {appFlow === 'dashboard' && (
                 <>
-                  {/* Module rendering based on Active Tab */}
-                  
-                  {/* Tab 1: Home Dashboard */}
-                  {activeTab === 'dashboard' && (
-                    <DashboardModule
-                      authName={authName}
-                      currentBaby={currentBaby}
-                      ageString={calculateBabyAge(currentBaby.dob)}
-                      checklistPercent={checklistPercent}
-                      checklist={checklist}
-                      toggleChecklistItem={toggleChecklistItem}
-                      milestones={milestones}
-                      calendarEvents={calendarEvents}
-                      articles={articles}
-                      setActiveTab={setActiveTab}
-                      setActiveArticle={setActiveArticle}
-                      childrenProfiles={children}
-                      activeChildIndex={activeChildIndex}
-                      setActiveChildIndex={setActiveChildIndex}
-                      motherPhase={motherPhase}
-                      pregnancyWeek={pregnancyWeek}
-                      setShowNotifications={setShowNotifications}
-                      notificationsCount={notifications.filter(n => !n.read).length}
-                    />
-                  )}
+                  {activeArticle ? (
+                    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '80px', '--theme-color': 'var(--article-primary)' } as React.CSSProperties}>
+                      {/* Back Header */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)', marginBottom: '16px' }}>
+                        <button onClick={() => setActiveArticle(null)} style={{ background: 'none', border: 'none', color: 'var(--article-primary)', fontSize: '14px', fontWeight: '750', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ← Back
+                        </button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <button
+                            onClick={() => toggleSaveArticle(activeArticle.id)}
+                            style={{ background: 'none', border: 'none', color: activeArticle.saved ? 'var(--article-primary)' : 'var(--color-text-secondary)', cursor: 'pointer' }}
+                          >
+                            <Bookmark size={20} fill={activeArticle.saved ? 'var(--article-primary)' : 'none'} />
+                          </button>
+                          <button style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                            <Share2 size={20} />
+                          </button>
+                        </div>
+                      </div>
 
-                  {/* Tab 2: Checklist */}
-                  {activeTab === 'checklist' && (
-                    <ChecklistModule
-                      checklist={checklist}
-                      toggleChecklistItem={toggleChecklistItem}
-                      setShowAddTaskModal={setShowAddTaskModal}
-                    />
-                  )}
+                      {/* Cover Photo */}
+                      <img
+                        src={activeArticle.id === 'art1' || activeArticle.id === 'art3' ? '/baby_sleep.png' : activeArticle.id === 'art2' ? '/mother_baby.png' : '/pregnancy.png'}
+                        alt={activeArticle.title}
+                        style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '16px', marginBottom: '16px' }}
+                      />
 
-                  {/* Tab 3: Calendar */}
-                  {activeTab === 'calendar' && (
-                    <CalendarModule
-                      calendarEvents={calendarEvents}
-                      selectedDate={selectedDate}
-                      setSelectedDate={setSelectedDate}
-                      setShowAddEventModal={setShowAddEventModal}
-                    />
-                  )}
+                      {/* Metadata */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', textAlign: 'left' }}>
+                        <span className="badge badge-article" style={{ alignSelf: 'flex-start', ...getCategoryBadgeStyle(activeArticle.category) }}>{activeArticle.category}</span>
+                        <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', lineHeight: '1.3' }}>{activeArticle.title}</h2>
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>By {activeArticle.author} • {activeArticle.readTime} • {activeArticle.date}</span>
+                      </div>
 
-                  {/* Tab 4: Articles */}
-                  {activeTab === 'articles' && (
-                    <ArticlesModule
-                      articles={filteredArticles}
-                      searchQuery={searchQuery}
-                      setSearchQuery={setSearchQuery}
-                      toggleSaveArticle={toggleSaveArticle}
-                      setActiveArticle={setActiveArticle}
-                    />
-                  )}
+                      {/* Content Body */}
+                      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', color: 'var(--color-text-primary)', fontSize: '14.5px', lineHeight: '1.6', textAlign: 'left' }}>
+                        <p style={{ fontWeight: '600', marginBottom: '14px', color: 'var(--color-text-secondary)', fontSize: '15px' }}>{activeArticle.summary}</p>
+                        <p style={{ whiteSpace: 'pre-line' }}>{activeArticle.content}</p>
+                      </div>
 
-                  {/* Tab 5: More Sub-Navigation */}
-                  {activeTab === 'profile' && (
-                    <MoreModule
-                      authName={authName}
-                      setAuthName={setAuthName}
-                      authEmail={authEmail}
-                      authPassword={authPassword}
-                      setAuthPassword={setAuthPassword}
-                      motherPhase={motherPhase}
-                      setMotherPhase={setMotherPhase}
-                      children={children}
-                      setChildren={setChildren}
-                      activeChildIndex={activeChildIndex}
-                      setActiveChildIndex={setActiveChildIndex}
-                      currentBaby={currentBaby}
-                      setShowAddGrowthModal={setShowAddGrowthModal}
-                      language={language}
-                      setLanguage={setLanguage}
-                      handleLogout={handleLogout}
-                      calendarEvents={calendarEvents}
-                    />
+                      {/* Read status toggle at bottom */}
+                      <button
+                        className="btn-primary"
+                        style={{ marginTop: '24px', backgroundColor: activeArticle.read ? 'var(--color-border)' : 'var(--article-primary)', color: activeArticle.read ? 'var(--color-text-primary)' : '#FFF' }}
+                        onClick={() => {
+                          toggleReadArticle(activeArticle.id);
+                        }}
+                      >
+                        {activeArticle.read ? 'Mark as Unread' : 'Mark as Read'}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Tab 1: Home Dashboard */}
+                      {activeTab === 'dashboard' && (
+                        <DashboardModule
+                          authName={authName}
+                          currentBaby={currentBaby}
+                          ageString={calculateBabyAge(currentBaby.dob)}
+                          checklistPercent={checklistPercent}
+                          checklist={checklist}
+                          toggleChecklistItem={toggleChecklistItem}
+                          milestones={getBabyMilestones(currentBaby)}
+                          calendarEvents={getCombinedCalendarEvents(currentBaby, calendarEvents)}
+                          articles={articles}
+                          setActiveTab={setActiveTab}
+                          setActiveArticle={handleOpenArticle}
+                          childrenProfiles={children}
+                          activeChildIndex={activeChildIndex}
+                          setActiveChildIndex={setActiveChildIndex}
+                          motherPhase={motherPhase}
+                          pregnancyWeek={pregnancyWeek}
+                          setShowNotifications={setShowNotifications}
+                          notificationsCount={notifications.filter(n => !n.read).length}
+                          setProfileSubView={setProfileSubView}
+                          setSelectedDate={setSelectedDate}
+                        />
+                      )}
+
+                      {/* Tab 2: Checklist */}
+                      {activeTab === 'checklist' && (
+                        <ChecklistModule
+                          checklist={checklist}
+                          toggleChecklistItem={toggleChecklistItem}
+                          setShowAddTaskModal={setShowAddTaskModal}
+                          deleteChecklistItem={deleteChecklistItem}
+                        />
+                      )}
+
+                      {/* Tab 3: Calendar */}
+                      {activeTab === 'calendar' && (
+                        <CalendarModule
+                          calendarEvents={getCombinedCalendarEvents(currentBaby, calendarEvents)}
+                          selectedDate={selectedDate}
+                          setSelectedDate={setSelectedDate}
+                          setShowAddEventModal={setShowAddEventModal}
+                          deleteCalendarEvent={deleteCalendarEvent}
+                        />
+                      )}
+
+                      {/* Tab 4: Milestones */}
+                      {activeTab === 'milestones' && (
+                        <MilestonesModule
+                          currentBaby={currentBaby}
+                          authName={authName}
+                          milestones={getBabyMilestones(currentBaby)}
+                          setMilestones={(updatedList) => {
+                            const updatedChildren = children.map((c, i) => i === activeChildIndex ? { ...c, milestones: updatedList } : c);
+                            setChildren(updatedChildren);
+                            localStorage.setItem('bamudi_children', JSON.stringify(updatedChildren));
+                          }}
+                        />
+                      )}
+
+                      {/* Tab 5: More Sub-Navigation */}
+                      {activeTab === 'profile' && (
+                        profileSubView === 'articles_list' ? (
+                          <div className="screen-scroll-container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
+                              <button onClick={() => setProfileSubView('menu')} style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '14px', fontWeight: '750', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                ← Back to Settings
+                              </button>
+                            </div>
+                            <ArticlesModule
+                              articles={filteredArticles}
+                              searchQuery={searchQuery}
+                              setSearchQuery={setSearchQuery}
+                              toggleSaveArticle={toggleSaveArticle}
+                              setActiveArticle={handleOpenArticle}
+                            />
+                          </div>
+                        ) : (
+                          <MoreModule
+                            authName={authName}
+                            setAuthName={setAuthName}
+                            authEmail={authEmail}
+                            authPassword={authPassword}
+                            setAuthPassword={setAuthPassword}
+                            motherPhase={motherPhase}
+                            setMotherPhase={setMotherPhase}
+                            children={children}
+                            setChildren={setChildren}
+                            activeChildIndex={activeChildIndex}
+                            setActiveChildIndex={setActiveChildIndex}
+                            currentBaby={currentBaby}
+                            setShowAddGrowthModal={setShowAddGrowthModal}
+                            language={language}
+                            setLanguage={setLanguage}
+                            handleLogout={handleLogout}
+                            calendarEvents={getCombinedCalendarEvents(currentBaby, calendarEvents)}
+                            profileSubView={profileSubView}
+                            setProfileSubView={setProfileSubView}
+                            pediatrician={pediatrician}
+                            setPediatrician={setPediatrician}
+                            setSelectedDate={setSelectedDate}
+                            setActiveTab={setActiveTab}
+                          />
+                        )
+                      )}
+                    </>
                   )}
 
                   {/* BOTTOM FLOATING TAB BAR */}
@@ -1237,8 +1527,8 @@ export default function App() {
                           ? 'var(--baby-primary)'
                           : activeTab === 'calendar'
                           ? 'var(--cal-primary)'
-                          : activeTab === 'articles'
-                          ? 'var(--article-primary)'
+                          : activeTab === 'milestones'
+                          ? 'var(--baby-primary)'
                           : 'var(--color-text-primary)'
                     } as React.CSSProperties}
                   >
@@ -1250,15 +1540,25 @@ export default function App() {
                       <CheckSquare size={20} />
                       <span className="nav-tab-label">Checklist</span>
                     </button>
-                    <button className={`nav-tab-item ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
+                    <button className={`nav-tab-item ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => {
+                      const today = new Date();
+                      const yyyy = today.getFullYear();
+                      const mm = String(today.getMonth() + 1).padStart(2, '0');
+                      const dd = String(today.getDate()).padStart(2, '0');
+                      setSelectedDate(`${yyyy}-${mm}-${dd}`);
+                      setActiveTab('calendar');
+                    }}>
                       <Calendar size={20} />
                       <span className="nav-tab-label">Calendar</span>
                     </button>
-                    <button className={`nav-tab-item ${activeTab === 'articles' ? 'active' : ''}`} onClick={() => setActiveTab('articles')}>
-                      <BookOpen size={20} />
-                      <span className="nav-tab-label">Articles</span>
+                    <button className={`nav-tab-item ${activeTab === 'milestones' ? 'active' : ''}`} onClick={() => setActiveTab('milestones')}>
+                      <Award size={20} />
+                      <span className="nav-tab-label">Milestones</span>
                     </button>
-                    <button className={`nav-tab-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+                    <button className={`nav-tab-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => {
+                      setProfileSubView('menu');
+                      setActiveTab('profile');
+                    }}>
                       <User size={20} />
                       <span className="nav-tab-label">Profile</span>
                     </button>
@@ -1275,44 +1575,6 @@ export default function App() {
         </div>
 
       </div>
-
-      {/* ARTICLE FULL PAGE OVERLAY BOTTOM SHEET */}
-      {activeArticle && (
-        <div className="bottom-sheet-overlay animate-fade-in" onClick={() => setActiveArticle(null)}>
-          <div className="bottom-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
-            <div className="bottom-sheet-handle"></div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="badge badge-article" style={getCategoryBadgeStyle(activeArticle.category)}>{activeArticle.category}</span>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  onClick={() => toggleSaveArticle(activeArticle.id)}
-                  style={{ background: 'none', border: 'none', color: activeArticle.saved ? 'var(--article-primary)' : 'var(--color-text-secondary)', cursor: 'pointer' }}
-                >
-                  <Bookmark size={20} fill={activeArticle.saved ? 'var(--article-primary)' : 'none'} />
-                </button>
-                <button style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
-                  <Share2 size={20} />
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--color-text-primary)', lineHeight: '1.3' }}>{activeArticle.title}</h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '6px' }}>By {activeArticle.author} • {activeArticle.readTime}</p>
-            </div>
-
-            <div style={{ flex: 1, borderTop: '1px solid var(--color-border)', paddingTop: '16px', color: 'var(--color-text-primary)', fontSize: '14.5px', lineHeight: '1.6', overflowY: 'auto' }}>
-              <p style={{ fontWeight: '500', marginBottom: '14px', color: 'var(--color-text-secondary)' }}>{activeArticle.summary}</p>
-              <p>{activeArticle.content}</p>
-            </div>
-
-            <button className="btn-secondary" style={{ marginTop: '10px' }} onClick={() => setActiveArticle(null)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ADD CUSTOM TASK BOTTOM SHEET */}
       {showAddTaskModal && (
@@ -1497,6 +1759,19 @@ export default function App() {
                 />
               </div>
 
+              <div className="input-group">
+                <span className="input-label">Head Circumference (cm)</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="input-field"
+                  value={newGrowthHead}
+                  onChange={(e) => setNewGrowthHead(e.target.value)}
+                  placeholder="e.g. 38.5"
+                  required
+                />
+              </div>
+
               <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}>
                 Log Metrics
               </button>
@@ -1510,56 +1785,126 @@ export default function App() {
         <div className="bottom-sheet-overlay animate-fade-in" onClick={() => setShowNotifications(false)}>
           <div className="bottom-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="bottom-sheet-handle"></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Notifications</h3>
-              {notifications.some(n => !n.read) && (
-                <button
-                  onClick={() => {
-                    setNotifications(notifications.map(n => ({ ...n, read: true })));
-                    alert('All marked as read!');
-                  }}
-                  style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                >
-                  Mark all as read
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {notifications.some(n => !n.read) && (
+                  <button
+                    onClick={() => {
+                      setNotifications(notifications.map(n => ({ ...n, read: true })));
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Mark read
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setNotifications([]);
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--reminder-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto' }}>
               {notifications.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--color-text-secondary)' }}>
-                  <Bell size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
-                  <p style={{ fontSize: '13.5px', fontWeight: '600' }}>No new notifications</p>
+                <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--color-text-secondary)' }}>
+                  <span style={{ fontSize: '36px', display: 'block', marginBottom: '10px', opacity: 0.5 }}>🔔</span>
+                  <p style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>All caught up!</p>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>No new notifications are available.</p>
                 </div>
               ) : (
-                notifications.map(notif => (
-                  <div
-                    key={notif.id}
-                    onClick={() => {
-                      setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
-                    }}
-                    style={{
-                      padding: '12px 14px',
-                      background: notif.read ? 'var(--bg-surface)' : 'rgba(244, 107, 138, 0.05)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: '16px',
-                      position: 'relative',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {!notif.read && (
-                      <div style={{ position: 'absolute', top: '14px', right: '14px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--mother-primary)' }}></div>
-                    )}
-                    <span style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{notif.title}</span>
-                    <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4', paddingRight: '12px' }}>{notif.message}</p>
-                    <span style={{ display: 'block', fontSize: '9.5px', color: 'var(--color-text-secondary)', marginTop: '6px' }}>{notif.time}</span>
-                  </div>
-                ))
+                notifications.map(notif => {
+                  // Determine icon details
+                  let iconBg = 'var(--dev-secondary)';
+                  let iconColor = 'var(--dev-primary)';
+                  let notifIcon = <Bell size={16} />;
+                  
+                  if (notif.title.includes('Vaccine')) {
+                    iconBg = 'var(--cal-secondary)';
+                    iconColor = 'var(--cal-primary)';
+                    notifIcon = <Award size={16} />;
+                  } else if (notif.title.includes('Partner')) {
+                    iconBg = 'var(--mother-secondary)';
+                    iconColor = 'var(--mother-primary)';
+                    notifIcon = <Share2 size={16} />;
+                  } else if (notif.title.includes('Milestone')) {
+                    iconBg = 'var(--baby-secondary)';
+                    iconColor = 'var(--baby-primary)';
+                    notifIcon = <TrendingUp size={16} />;
+                  } else if (notif.title.includes('Guide')) {
+                    iconBg = 'var(--article-secondary)';
+                    iconColor = 'var(--article-primary)';
+                    notifIcon = <BookOpen size={16} />;
+                  }
+                  
+                  return (
+                    <div
+                      key={notif.id}
+                      onClick={() => {
+                        setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                      }}
+                      style={{
+                        padding: '12px 14px',
+                        background: notif.read ? 'var(--bg-surface)' : 'rgba(244, 107, 138, 0.04)',
+                        border: notif.read ? '1px solid var(--color-border)' : '1px solid rgba(244, 107, 138, 0.15)',
+                        borderRadius: '16px',
+                        display: 'flex',
+                        gap: '12px',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {/* Icon circle */}
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        backgroundColor: iconBg,
+                        color: iconColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {notifIcon}
+                      </div>
+
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '750', color: 'var(--color-text-primary)' }}>{notif.title}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '9px', color: 'var(--color-text-secondary)' }}>{notif.time}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setNotifications(notifications.filter(n => n.id !== notif.id));
+                              }}
+                              style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                            >
+                              <Trash size={13} style={{ opacity: 0.6 }} />
+                            </button>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4', margin: '4px 0 0 0' }}>{notif.message}</p>
+                      </div>
+                      
+                      {!notif.read && (
+                        <div style={{ position: 'absolute', top: '16px', left: '6px', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--mother-primary)' }}></div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
 
-            <button className="btn-secondary" style={{ marginTop: '16px' }} onClick={() => setShowNotifications(false)}>
+            <button className="btn-secondary" style={{ marginTop: '16px', width: '100%', padding: '10px', borderRadius: '12px' }} onClick={() => setShowNotifications(false)}>
               Dismiss
             </button>
           </div>
@@ -1672,7 +2017,9 @@ function DashboardModule({
   motherPhase,
   pregnancyWeek,
   setShowNotifications,
-  notificationsCount
+  notificationsCount,
+  setProfileSubView,
+  setSelectedDate
 }: {
   authName: string;
   currentBaby: any;
@@ -1692,6 +2039,8 @@ function DashboardModule({
   pregnancyWeek: number;
   setShowNotifications: (val: boolean) => void;
   notificationsCount: number;
+  setProfileSubView: (view: string) => void;
+  setSelectedDate: (date: string) => void;
 }) {
   // Dynamic metrics calculations
   const pendingTasksCount = checklist.filter(t => t.category === 'daily' && !t.completed).length;
@@ -1703,7 +2052,7 @@ function DashboardModule({
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   })();
-  const todayEventsCount = calendarEvents.filter(e => e.date === todayDateStr).length;
+  const todayEventsCount = getCombinedCalendarEvents(currentBaby, calendarEvents).filter(e => e.date === todayDateStr).length;
 
   const upcomingMilestonesCount = milestones.filter(m => m.status === 'upcoming' || m.status === 'in_progress').length;
 
@@ -1808,6 +2157,41 @@ function DashboardModule({
         </div>
       )}
 
+      {/* 2.5 Age-Specific Daily Guidance Banner */}
+      {motherPhase === 'baby' && (() => {
+        const ageInMonths = calculateAgeInMonths(currentBaby.dob);
+        let phaseTitle = "Newborn Phase";
+        let tipText = "Newborns sleep 16-18 hours a day. Focus on skin-to-skin contact, frequent feeding, and resting whenever the baby sleeps.";
+        
+        if (ageInMonths >= 6) {
+          phaseTitle = "Toddler Exploration";
+          tipText = "Introduce iron-rich soft solid foods (like pureed carrots, bananas) alongside regular feeding. Encourage crawling and motor checks.";
+        } else if (ageInMonths >= 3) {
+          phaseTitle = "Infant Discovery";
+          tipText = "Your baby is starting to track objects! Increase tummy time practice to 20 mins daily to support back muscle development.";
+        }
+        
+        return (
+          <div style={{
+            background: 'var(--dev-secondary)',
+            border: '1px solid rgba(83, 109, 254, 0.15)',
+            borderRadius: '16px',
+            padding: '14px 16px',
+            marginTop: '12px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            textAlign: 'left'
+          }}>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>💡</span>
+            <div>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--dev-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Daily Guidance • {phaseTitle}</span>
+              <p style={{ fontSize: '12.5px', color: 'var(--color-text-primary)', lineHeight: '1.45', margin: '4px 0 0 0' }}>{tipText}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 3. Today's Progress Horizontal Bar */}
       <div className="progress-bar-section">
         <div className="progress-bar-header">
@@ -1829,7 +2213,14 @@ function DashboardModule({
           <span className="metric-value">{pendingTasksCount} Pending</span>
         </div>
         
-        <div className="metric-card reminders" onClick={() => setActiveTab('calendar')}>
+        <div className="metric-card reminders" onClick={() => {
+          const today = new Date();
+          const yyyy = today.getFullYear();
+          const mm = String(today.getMonth() + 1).padStart(2, '0');
+          const dd = String(today.getDate()).padStart(2, '0');
+          setSelectedDate(`${yyyy}-${mm}-${dd}`);
+          setActiveTab('calendar');
+        }}>
           <div className="metric-icon-wrapper">
             <Clock size={18} />
           </div>
@@ -1837,7 +2228,9 @@ function DashboardModule({
           <span className="metric-value">{todayEventsCount} Today</span>
         </div>
 
-        <div className="metric-card milestones" onClick={() => setActiveTab('profile')}>
+        <div className="metric-card milestones" onClick={() => {
+          setActiveTab('milestones');
+        }}>
           <div className="metric-icon-wrapper">
             <Award size={18} />
           </div>
@@ -1877,7 +2270,18 @@ function DashboardModule({
 
       {/* Recommended Articles list */}
       <div style={{ marginTop: '24px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '12px' }}>Articles For You</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Articles For You</h3>
+          <button
+            onClick={() => {
+              setActiveTab('profile');
+              setProfileSubView('articles_list');
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '12.5px', fontWeight: '750', cursor: 'pointer' }}
+          >
+            View All
+          </button>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {articles.slice(0, 2).map(art => (
             <div
@@ -1892,7 +2296,14 @@ function DashboardModule({
                 style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '12px' }}
               />
               <div style={{ flex: 1 }}>
-                <span className="badge badge-article" style={{ fontSize: '9px', padding: '3px 8px', ...getCategoryBadgeStyle(art.category) }}>{art.category}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="badge badge-article" style={{ fontSize: '9px', padding: '3px 8px', ...getCategoryBadgeStyle(art.category) }}>{art.category}</span>
+                  {art.read ? (
+                    <span style={{ fontSize: '10px', color: 'var(--color-success)', fontWeight: '750' }}>Read ✓</span>
+                  ) : (
+                    <span style={{ fontSize: '10px', color: 'var(--mother-primary)', fontWeight: '750' }}>New •</span>
+                  )}
+                </div>
                 <h4 style={{ fontSize: '13px', fontWeight: '700', marginTop: '4px', lineHeight: '1.3' }}>{art.title}</h4>
                 <span style={{ fontSize: '10.5px', color: 'var(--color-text-secondary)', display: 'block', marginTop: '2px' }}>{art.readTime}</span>
               </div>
@@ -1909,11 +2320,13 @@ function DashboardModule({
 function ChecklistModule({
   checklist,
   toggleChecklistItem,
-  setShowAddTaskModal
+  setShowAddTaskModal,
+  deleteChecklistItem
 }: {
   checklist: ChecklistItem[];
   toggleChecklistItem: (id: string) => void;
   setShowAddTaskModal: (val: boolean) => void;
+  deleteChecklistItem: (id: string) => void;
 }) {
   const [filter, setFilter] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
@@ -1971,14 +2384,41 @@ function ChecklistModule({
           </div>
         ) : (
           filteredItems.map(item => (
-            <div key={item.id} className={`checklist-item ${item.completed ? 'checked' : ''}`} onClick={() => toggleChecklistItem(item.id)}>
-              <div className={`checklist-checkbox ${item.completed ? 'checked' : ''}`}>
-                {item.completed && <Check size={14} />}
+            <div key={item.id} className={`checklist-item ${item.completed ? 'checked' : ''}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: 'pointer' }} onClick={() => toggleChecklistItem(item.id)}>
+                <div className={`checklist-checkbox ${item.completed ? 'checked' : ''}`}>
+                  {item.completed && <Check size={14} />}
+                </div>
+                <div>
+                  <span style={{ fontSize: '14px', fontWeight: '600', textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'var(--color-text-secondary)' : 'var(--color-text-primary)', display: 'block' }}>{item.task}</span>
+                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{item.time}</span>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '14px', fontWeight: '600', textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'var(--color-text-secondary)' : 'var(--color-text-primary)' }}>{item.task}</span>
-                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{item.time}</span>
-              </div>
+              
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(`Are you sure you want to delete "${item.task}"?`)) {
+                    deleteChecklistItem(item.id);
+                  }
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.6,
+                  transition: 'opacity 0.2s'
+                }}
+                className="checklist-delete-btn"
+              >
+                <Trash size={15} />
+              </button>
             </div>
           ))
         )}
@@ -1993,12 +2433,14 @@ function CalendarModule({
   calendarEvents,
   selectedDate,
   setSelectedDate,
-  setShowAddEventModal
+  setShowAddEventModal,
+  deleteCalendarEvent
 }: {
   calendarEvents: CalendarEvent[];
   selectedDate: string;
   setSelectedDate: (date: string) => void;
   setShowAddEventModal: (val: boolean) => void;
+  deleteCalendarEvent: (id: string) => void;
 }) {
   
   // Custom calendar days helper (Mocking July 2026)
@@ -2123,7 +2565,20 @@ function CalendarModule({
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h4 style={{ fontSize: '14px', fontWeight: '700' }}>{event.title}</h4>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>{event.time}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>{event.time}</span>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete event "${event.title}"?`)) {
+                            deleteCalendarEvent(event.id);
+                          }
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                        className="calendar-delete-btn"
+                      >
+                        <Trash size={14} style={{ opacity: 0.6 }} />
+                      </button>
+                    </div>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>{event.desc}</p>
                 </div>
@@ -2234,7 +2689,14 @@ function ArticlesModule({
               />
               <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="badge badge-article" style={getCategoryBadgeStyle(art.category)}>{art.category}</span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span className="badge badge-article" style={getCategoryBadgeStyle(art.category)}>{art.category}</span>
+                    {art.read ? (
+                      <span style={{ fontSize: '10.5px', color: 'var(--color-success)', fontWeight: '750' }}>Read ✓</span>
+                    ) : (
+                      <span style={{ fontSize: '10.5px', color: 'var(--mother-primary)', fontWeight: '750' }}>New •</span>
+                    )}
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2265,6 +2727,214 @@ function ArticlesModule({
   );
 }
 
+// 5.5 STANDALONE MILESTONES MODULE
+function MilestonesModule({
+  currentBaby,
+  authName,
+  milestones,
+  setMilestones
+}: {
+  currentBaby: any;
+  authName: string;
+  milestones: MilestoneItem[];
+  setMilestones: (updatedList: MilestoneItem[]) => void;
+}) {
+  const [milestoneFilter, setMilestoneFilter] = useState<'all' | 'motor' | 'cognitive' | 'communication'>('all');
+  
+  return (
+    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '80px', '--theme-color': 'var(--baby-primary)' } as React.CSSProperties}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Milestones</h2>
+        
+        {/* Explanation card */}
+        <div style={{
+          background: 'linear-gradient(135deg, var(--baby-secondary) 0%, rgba(255,255,255,0.4) 100%)',
+          border: '1px solid var(--baby-primary)',
+          borderRadius: '20px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px'
+        }}>
+          <span style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--baby-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            💡 What is the Milestone Tracker?
+          </span>
+          <p style={{ fontSize: '12.5px', color: 'var(--color-text-primary)', lineHeight: '1.45', margin: 0 }}>
+            Milestones are developmental checkpoints (like sitting up, rolling over, and laughing) that track {currentBaby.name}'s motor, cognitive, and communication progress.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', paddingTop: '8px', borderTop: '1px solid rgba(83, 200, 139, 0.2)', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>
+            <span>Logged by Mother {authName}</span>
+            <span style={{ color: 'var(--color-success)' }}>
+              {milestones.filter(m => m.status === 'achieved').length} of {milestones.length} Completed ✓
+            </span>
+          </div>
+        </div>
+
+        {/* Category Pill Filters */}
+        <div style={{ display: 'flex', gap: '4px', background: 'var(--color-border)', padding: '4px', borderRadius: '14px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+          {([
+            { key: 'all', label: 'All' },
+            { key: 'motor', label: 'Motor' },
+            { key: 'cognitive', label: 'Cognitive' },
+            { key: 'communication', label: 'Communication' }
+          ] as const).map(tab => {
+            const active = milestoneFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setMilestoneFilter(tab.key)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: active ? '#FFFFFF' : 'transparent',
+                  color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  fontWeight: '700',
+                  fontSize: '12.5px',
+                  cursor: 'pointer',
+                  boxShadow: active ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* List of Milestones */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
+          {(() => {
+            const filtered = milestones.filter(m => milestoneFilter === 'all' || m.category === milestoneFilter);
+            if (filtered.length === 0) {
+              return (
+                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--color-text-secondary)' }}>
+                  No milestones found in this category.
+                </div>
+              );
+            }
+            return filtered.map(m => {
+              let statusStripeColor = 'var(--color-border)';
+              let cardBorderColor = 'var(--color-border)';
+              let statusLabel = 'Upcoming';
+              let statusLabelColor = 'var(--color-text-secondary)';
+              let statusLabelBg = 'var(--bg-app)';
+              
+              if (m.status === 'achieved') {
+                statusStripeColor = 'var(--color-success)';
+                cardBorderColor = 'rgba(83, 200, 139, 0.3)';
+                statusLabel = 'Achieved';
+                statusLabelColor = 'var(--color-success)';
+                statusLabelBg = 'var(--color-success-bg)';
+              } else if (m.status === 'in_progress') {
+                statusStripeColor = '#F2994A';
+                cardBorderColor = 'rgba(242, 153, 74, 0.3)';
+                statusLabel = 'In Progress';
+                statusLabelColor = '#F2994A';
+                statusLabelBg = 'rgba(242, 153, 74, 0.1)';
+              }
+              
+              return (
+                <div
+                  key={m.id}
+                  style={{
+                    background: 'var(--bg-surface)',
+                    border: `1px solid ${cardBorderColor}`,
+                    borderRadius: '18px',
+                    padding: '16px 16px 16px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: '6px',
+                    backgroundColor: statusStripeColor
+                  }} />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h4 style={{ fontSize: '15px', fontWeight: '750', color: 'var(--color-text-primary)' }}>{m.title}</h4>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '8px', textTransform: 'capitalize', background: m.category === 'motor' ? 'var(--cal-secondary)' : m.category === 'cognitive' ? 'var(--dev-secondary)' : 'var(--mother-secondary)', color: m.category === 'motor' ? 'var(--cal-primary)' : m.category === 'cognitive' ? 'var(--dev-primary)' : 'var(--mother-primary)', fontWeight: '700' }}>
+                        {m.category}
+                      </span>
+                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '8px', background: statusLabelBg, color: statusLabelColor, fontWeight: '700' }}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '12.5px', color: 'var(--color-text-secondary)', lineHeight: '1.45', margin: 0 }}>{m.desc}</p>
+                  
+                  {/* Interactive Toggle Badges */}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+                    {(['achieved', 'in_progress', 'upcoming'] as const).map(status => {
+                      const isActive = m.status === status;
+                      let bg = 'var(--bg-app)';
+                      let color = 'var(--color-text-secondary)';
+                      let border = '1px solid var(--color-border)';
+                      
+                      if (isActive) {
+                        if (status === 'achieved') {
+                          bg = 'var(--color-success-bg)';
+                          color = 'var(--color-success)';
+                          border = '1px solid var(--color-success)';
+                        } else if (status === 'in_progress') {
+                          bg = 'rgba(242, 153, 74, 0.1)';
+                          color = '#F2994A';
+                          border = '1px solid #F2994A';
+                        } else {
+                          bg = 'var(--baby-secondary)';
+                          color = 'var(--baby-primary)';
+                          border = '1px solid var(--baby-primary)';
+                        }
+                      }
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => {
+                            const updated = milestones.map(item => item.id === m.id ? { ...item, status } : item);
+                            setMilestones(updated);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '8px 0',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: '750',
+                            background: bg,
+                            color: color,
+                            border: border,
+                            cursor: 'pointer',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.02em',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {status === 'in_progress' ? 'In Progress' : status}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 6. MORE & PROFILE SUB-NAVIGATION MODULE
 function MoreModule({
   authName,
@@ -2283,7 +2953,13 @@ function MoreModule({
   language,
   setLanguage,
   handleLogout,
-  calendarEvents
+  calendarEvents,
+  profileSubView,
+  setProfileSubView,
+  pediatrician,
+  setPediatrician,
+  setSelectedDate,
+  setActiveTab
 }: {
   authName: string;
   setAuthName: (val: string) => void;
@@ -2302,8 +2978,15 @@ function MoreModule({
   setLanguage: (val: string) => void;
   handleLogout: () => void;
   calendarEvents: CalendarEvent[];
+  profileSubView: string;
+  setProfileSubView: (val: string) => void;
+  pediatrician: { name: string, clinic: string, phone: string };
+  setPediatrician: (val: any) => void;
+  setSelectedDate: (date: string) => void;
+  setActiveTab: (tab: any) => void;
 }) {
-  const [activeSubView, setActiveSubView] = useState<'menu' | 'mother_profile_info' | 'baby_profile_info' | 'growth_tracker' | 'reminders' | 'invite_partner' | 'medical_info' | 'memories' | 'nursery_notes' | 'privacy_policy' | 'terms_conditions' | 'help_center'>('menu');
+  const activeSubView = profileSubView;
+  const setActiveSubView = setProfileSubView;
   
   // Local Mother State
   const [tempMotherName, setTempMotherName] = useState(authName);
@@ -2336,6 +3019,18 @@ function MoreModule({
   const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head' | 'bmi'>('weight');
   const [reminderFilterTab, setReminderFilterTab] = useState<'today' | 'tomorrow' | 'week'>('today');
   const [partnerEmail, setPartnerEmail] = useState('');
+  
+  // Local Doctor State
+  const [showDoctorForm, setShowDoctorForm] = useState(false);
+  const [tempDocName, setTempDocName] = useState(pediatrician.name);
+  const [tempDocClinic, setTempDocClinic] = useState(pediatrician.clinic);
+  const [tempDocPhone, setTempDocPhone] = useState(pediatrician.phone);
+
+  useEffect(() => {
+    setTempDocName(pediatrician.name);
+    setTempDocClinic(pediatrician.clinic);
+    setTempDocPhone(pediatrician.phone);
+  }, [pediatrician]);
 
   const todayDateStr = (() => {
     const today = new Date();
@@ -2371,15 +3066,11 @@ function MoreModule({
       {activeSubView !== 'menu' && (
         <button
           onClick={() => {
-            if (activeSubView === 'medical_info' || activeSubView === 'memories' || activeSubView === 'nursery_notes') {
-              setActiveSubView('baby_profile_info');
-            } else {
-              setActiveSubView('menu');
-            }
+            setActiveSubView('menu');
           }}
           style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: '600', marginBottom: '14px', paddingLeft: '0' }}
         >
-          <ChevronLeft size={16} /> {activeSubView === 'medical_info' || activeSubView === 'memories' || activeSubView === 'nursery_notes' ? 'Back to Details' : 'Back to Profile'}
+          <ChevronLeft size={16} /> Back to Settings
         </button>
       )}
 
@@ -2425,7 +3116,7 @@ function MoreModule({
               </div>
               <div className="profile-row-title-container">
                 <span className="profile-row-title">Baby's Profile</span>
-                <span className="profile-row-desc">Birth records, medical logs, nursery notes</span>
+                <span className="profile-row-desc">Manage child profiles, switch or add babies</span>
               </div>
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
@@ -2439,6 +3130,69 @@ function MoreModule({
                 <span className="profile-row-desc">Weight, height, and head circumference</span>
               </div>
               <span className="profile-row-value">{currentBaby.weight} kg</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setActiveSubView('articles_list')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <BookOpen size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Guides & Articles</span>
+                <span className="profile-row-desc">Read expert paracetamol & sleep tips</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+
+          {/* Section: Routine & Health Care */}
+          <span className="profile-section-title">Routine & Health Care</span>
+          <div className="profile-list-group">
+            <div className="profile-list-row" onClick={() => setActiveSubView('pediatrician_info')} style={{ '--theme-color': 'var(--dev-primary)', '--theme-bg': 'var(--dev-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Activity size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Pediatrician Info</span>
+                <span className="profile-row-desc">Doctor contact details & clinic info</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setActiveSubView('vaccines_schedule')} style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Award size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Vaccination Tracker</span>
+                <span className="profile-row-desc">Due dates, administered status logs</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setActiveSubView('nursery_notes')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <BookMarked size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Nursery Logs</span>
+                <span className="profile-row-desc">Feeding, sleeping, and wet diaper logs</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+
+          {/* Section: Memories */}
+          <span className="profile-section-title">Memories & Albums</span>
+          <div className="profile-list-group">
+            <div className="profile-list-row" onClick={() => setActiveSubView('memories')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Camera size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Photos & Memories</span>
+                <span className="profile-row-desc">Upload photos & capture growth milestones</span>
+              </div>
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
           </div>
@@ -2457,13 +3211,35 @@ function MoreModule({
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
 
-            <div className="profile-list-row" onClick={() => setActiveSubView('reminders')} style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties}>
+            <div className="profile-list-row" onClick={() => {
+              const today = new Date();
+              const yyyy = today.getFullYear();
+              const mm = String(today.getMonth() + 1).padStart(2, '0');
+              const dd = String(today.getDate()).padStart(2, '0');
+              setSelectedDate(`${yyyy}-${mm}-${dd}`);
+              setActiveTab('calendar');
+            }} style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties}>
               <div className="profile-row-icon-wrapper">
                 <Clock size={18} />
               </div>
               <div className="profile-row-title-container">
-                <span className="profile-row-title">System Reminders</span>
-                <span className="profile-row-desc">Diaper changing, vaccination, vitamins</span>
+                <span className="profile-row-title">System Reminders & Calendar</span>
+                <span className="profile-row-desc">Vaccinations, pediatrician wellness checkups, feeds</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+
+          {/* Section: Security */}
+          <span className="profile-section-title">Account Security</span>
+          <div className="profile-list-group" style={{ marginBottom: '14px' }}>
+            <div className="profile-list-row" onClick={() => setActiveSubView('change_password')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Key size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Change Password</span>
+                <span className="profile-row-desc">Update account access password</span>
               </div>
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
@@ -2607,69 +3383,7 @@ function MoreModule({
             </div>
           </div>
 
-          {/* Change Password Block */}
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '10px', paddingLeft: '4px' }}>Security Settings</span>
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '14px' }}>
-            <div className="input-group">
-              <span className="input-label">Current Password</span>
-              <input
-                type="password"
-                className="input-field"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Enter current password"
-              />
-            </div>
-            
-            <div className="input-group">
-              <span className="input-label">New Password</span>
-              <input
-                type="password"
-                className="input-field"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-              />
-            </div>
 
-            <div className="input-group">
-              <span className="input-label">Confirm New Password</span>
-              <input
-                type="password"
-                className="input-field"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (!oldPassword || !newPassword || !confirmPassword) {
-                  alert('Please fill out all password fields!');
-                  return;
-                }
-                if (oldPassword !== authPassword) {
-                  alert('Current password does not match!');
-                  return;
-                }
-                if (newPassword !== confirmPassword) {
-                  alert('New passwords do not match!');
-                  return;
-                }
-                setAuthPassword(newPassword);
-                setOldPassword('');
-                setNewPassword('');
-                setConfirmPassword('');
-                alert('Password changed successfully!');
-              }}
-              className="btn-secondary"
-              style={{ padding: '10.5px', borderRadius: '12px', background: 'rgba(0,0,0,0.02)', fontWeight: '700', fontSize: '13px' }}
-            >
-              Update Password
-            </button>
-          </div>
 
           <button
             onClick={() => {
@@ -2822,12 +3536,23 @@ function MoreModule({
                       alert('Please fill out all fields!');
                       return;
                     }
-                    const newBaby = {
+                    const newBaby: ChildProfile = {
                       name: newChildName,
                       dob: newChildDob,
                       gender: newChildGender,
                       weight: 3.2,
-                      height: 50
+                      height: 50,
+                      head: 34.0,
+                      growthLogs: [
+                        { id: '1', age: 'Month 1', weight: 3.2, height: 50, head: 34.0, date: newChildDob }
+                      ],
+                      vaccineSchedule: [
+                        { name: 'BCG (Tuberculosis)', date: `Due: ${newChildDob}`, status: 'pending' },
+                        { name: 'HepB Dose 1 & 2', date: `Due: ${newChildDob}`, status: 'pending' },
+                        { name: 'Rotavirus Dose 1', date: `Due: ${newChildDob}`, status: 'pending' },
+                        { name: 'DTaP-IPV-Hib Dose 1', date: `Due: ${newChildDob}`, status: 'pending' },
+                        { name: 'PCV Dose 1', date: `Due: ${newChildDob}`, status: 'pending' }
+                      ]
                     };
                     const updated = [...children, newBaby];
                     setChildren(updated);
@@ -2929,31 +3654,7 @@ function MoreModule({
             </div>
           </div>
 
-          {/* Child profile sub-logs */}
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '8px', paddingLeft: '4px' }}>Baby Log Sheets</span>
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-            <div
-              onClick={() => setActiveSubView('medical_info')}
-              style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
-            >
-              <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>Medical Information</span>
-              <ChevronRight size={16} color="var(--color-text-secondary)" />
-            </div>
-            <div
-              onClick={() => setActiveSubView('memories')}
-              style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
-            >
-              <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>Photos & Memories</span>
-              <ChevronRight size={16} color="var(--color-text-secondary)" />
-            </div>
-            <div
-              onClick={() => setActiveSubView('nursery_notes')}
-              style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-            >
-              <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>Nursery Notes</span>
-              <ChevronRight size={16} color="var(--color-text-secondary)" />
-            </div>
-          </div>
+
 
           <button
             onClick={() => {
@@ -2981,99 +3682,143 @@ function MoreModule({
       )}
 
       {/* VIEW 3: GROWTH TRACKER */}
-      {activeSubView === 'growth_tracker' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Growth Tracker</h2>
-            <button
-              onClick={() => setShowAddGrowthModal(true)}
-              className="badge"
-              style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-            >
-              <Plus size={12} /> Log Metric
-            </button>
-          </div>
+      {activeSubView === 'growth_tracker' && (() => {
+        const logs = currentBaby.growthLogs && currentBaby.growthLogs.length > 0
+          ? currentBaby.growthLogs
+          : [
+              { id: '1', age: 'Month 1', weight: 3.2, height: 51, head: 34.2, date: '2026-03-12' },
+              { id: '2', age: 'Month 2', weight: 4.1, height: 54, head: 35.5, date: '2026-04-12' },
+              { id: '3', age: 'Month 3', weight: 4.8, height: 57, head: 36.8, date: '2026-05-12' },
+              { id: '4', age: 'Month 5 (Now)', weight: 5.6, height: 62, head: 38.5, date: '2026-07-12' }
+            ];
+        const latestLogs = logs.slice(-4);
+        const values = latestLogs.map((l: any) => {
+          if (growthMetricTab === 'weight') return l.weight;
+          if (growthMetricTab === 'height') return l.height;
+          if (growthMetricTab === 'head') return l.head;
+          const w = l.weight;
+          const h = l.height;
+          return h ? parseFloat((w / ((h / 100) * (h / 100))).toFixed(1)) : 15.0;
+        });
 
-          {/* Metric Selector Tabs */}
-          <div className="growth-tabs">
-            {(['weight', 'height', 'head', 'bmi'] as const).map(tab => (
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const range = maxVal - minVal || 1;
+        const yCoords = values.map((val: number) => {
+          return 90 - ((val - minVal) / range) * 65;
+        });
+
+        // Generate smooth SVG curve segments
+        const pathD = `M 0 ${yCoords[0]} Q 75 ${yCoords[1]} 150 ${yCoords[2]} T 300 ${yCoords[3]}`;
+        const fillD = `M 0 ${yCoords[0]} Q 75 ${yCoords[1]} 150 ${yCoords[2]} T 300 ${yCoords[3]} L 300 120 L 0 120 Z`;
+
+        return (
+          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Growth Tracker</h2>
               <button
-                key={tab}
-                onClick={() => setGrowthMetricTab(tab)}
-                className={`growth-tab-btn ${growthMetricTab === tab ? 'active' : ''}`}
+                onClick={() => setShowAddGrowthModal(true)}
+                className="badge"
+                style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                <Plus size={12} /> Log Metric
               </button>
-            ))}
-          </div>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
+              Logged by Mother {authName} for active child {currentBaby.name} ({currentBaby.gender})
+            </p>
 
-          {/* SVG Graph container */}
-          <div className="growth-chart-container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>
-                {growthMetricTab === 'weight' ? 'Weight Curve (kg)' : growthMetricTab === 'height' ? 'Height Curve (cm)' : growthMetricTab === 'head' ? 'Head Circ. (cm)' : 'BMI curve'}
-              </span>
-              <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: '700' }}>
-                Latest: {growthMetricTab === 'weight' ? `${currentBaby.weight} kg` : growthMetricTab === 'height' ? `${currentBaby.height} cm` : 'Normal'}
-              </span>
+            {/* Metric Selector Tabs */}
+            <div className="growth-tabs">
+              {(['weight', 'height', 'head', 'bmi'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setGrowthMetricTab(tab)}
+                  className={`growth-tab-btn ${growthMetricTab === tab ? 'active' : ''}`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
 
-            <div style={{ width: '100%', height: '140px', background: 'var(--bg-app)', borderRadius: '14px', padding: '10px', position: 'relative' }}>
-              <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
-                <line x1="0" y1="80" x2="300" y2="80" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
-                <line x1="0" y1="40" x2="300" y2="40" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
-                <path d="M 0 110 Q 75 80 150 55 T 300 30 L 300 50 Q 225 75 150 90 T 0 120 Z" fill="rgba(83, 200, 139, 0.1)" />
-                <path d="M 0 102 Q 75 72 150 48 T 300 20" stroke="var(--baby-primary)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-                <circle cx="0" cy="102" r="4" fill="var(--baby-primary)" />
-                <circle cx="75" cy="72" r="4" fill="var(--baby-primary)" />
-                <circle cx="150" cy="48" r="4" fill="var(--baby-primary)" />
-                <circle cx="300" cy="20" r="5" fill="var(--baby-primary)" />
-              </svg>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '8px', padding: '0 4px' }}>
-              <span>Month 1</span><span>Month 2</span><span>Month 3</span><span>Month 5 (Now)</span>
-            </div>
-          </div>
+            {/* SVG Graph container */}
+            <div className="growth-chart-container">
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>
+                  {growthMetricTab === 'weight' ? 'Weight Curve (kg)' : growthMetricTab === 'height' ? 'Height Curve (cm)' : growthMetricTab === 'head' ? 'Head Circ. (cm)' : 'BMI curve'}
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: '700' }}>
+                  Latest: {
+                    (() => {
+                      if (growthMetricTab === 'weight') return `${currentBaby.weight} kg`;
+                      if (growthMetricTab === 'height') return `${currentBaby.height} cm`;
+                      if (growthMetricTab === 'head') return `${currentBaby.head || 38.5} cm`;
+                      const w = currentBaby.weight;
+                      const h = currentBaby.height;
+                      return h ? (w / ((h / 100) * (h / 100))).toFixed(1) : '15.0';
+                    })()
+                  }
+                </span>
+              </div>
 
-          {/* Metric list Table */}
-          <div style={{ marginTop: '10px' }}>
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Log History</h4>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-              <table className="growth-history-table">
-                <thead>
-                  <tr>
-                    <th>Age</th>
-                    <th>{growthMetricTab.toUpperCase()}</th>
-                    <th>Percentile</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Month 5 (Today)</td>
-                    <td>{growthMetricTab === 'weight' ? `${currentBaby.weight} kg` : growthMetricTab === 'height' ? `${currentBaby.height} cm` : '38.5 cm'}</td>
-                    <td>74%</td>
-                  </tr>
-                  <tr>
-                    <td>Month 3</td>
-                    <td>{growthMetricTab === 'weight' ? '4.8 kg' : growthMetricTab === 'height' ? '57 cm' : '36.8 cm'}</td>
-                    <td>70%</td>
-                  </tr>
-                  <tr>
-                    <td>Month 2</td>
-                    <td>{growthMetricTab === 'weight' ? '4.1 kg' : growthMetricTab === 'height' ? '54 cm' : '35.5 cm'}</td>
-                    <td>68%</td>
-                  </tr>
-                  <tr>
-                    <td>Month 1</td>
-                    <td>{growthMetricTab === 'weight' ? '3.2 kg' : growthMetricTab === 'height' ? '51 cm' : '34.2 cm'}</td>
-                    <td>65%</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div style={{ width: '100%', height: '140px', background: 'var(--bg-app)', borderRadius: '14px', padding: '10px', position: 'relative' }}>
+                <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <line x1="0" y1="80" x2="300" y2="80" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="0" y1="40" x2="300" y2="40" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
+                  <path d={fillD} fill="rgba(83, 200, 139, 0.1)" />
+                  <path d={pathD} stroke="var(--baby-primary)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+                  <circle cx="0" cy={yCoords[0]} r="4.5" fill="var(--baby-primary)" />
+                  <circle cx="75" cy={yCoords[1]} r="4.5" fill="var(--baby-primary)" />
+                  <circle cx="150" cy={yCoords[2]} r="4.5" fill="var(--baby-primary)" />
+                  <circle cx="300" cy={yCoords[3]} r="5.5" fill="var(--baby-primary)" />
+                </svg>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '8px', padding: '0 4px' }}>
+                {latestLogs.map((l: any, index: number) => (
+                  <span key={index}>{l.age}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Metric list Table */}
+            <div style={{ marginTop: '10px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Log History</h4>
+              <div style={{ background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+                <table className="growth-history-table">
+                  <thead>
+                    <tr>
+                      <th>Age</th>
+                      <th>{growthMetricTab.toUpperCase()}</th>
+                      <th>Percentile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...latestLogs].reverse().map((l: any, index: number) => {
+                      const val = (() => {
+                        if (growthMetricTab === 'weight') return `${l.weight} kg`;
+                        if (growthMetricTab === 'height') return `${l.height} cm`;
+                        if (growthMetricTab === 'head') return `${l.head} cm`;
+                        const w = l.weight;
+                        const h = l.height;
+                        return h ? (w / ((h / 100) * (h / 100))).toFixed(1) : '15.0';
+                      })();
+                      const percentiles = [74, 70, 68, 65];
+                      const pct = percentiles[index % percentiles.length] + '%';
+                      return (
+                        <tr key={l.id || index}>
+                          <td>{l.age}</td>
+                          <td>{val}</td>
+                          <td>{pct}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* VIEW 4: REMINDERS LIST */}
       {activeSubView === 'reminders' && (
@@ -3184,52 +3929,83 @@ function MoreModule({
         </div>
       )}
 
-      {/* VIEW 7: MEDICAL INFO */}
-      {activeSubView === 'medical_info' && (
+      {/* VIEW 7a: PEDIATRICIAN INFO */}
+      {activeSubView === 'pediatrician_info' && (
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Medical Information</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Pediatrician</h2>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
+            Primary care provider details logged by Mother {authName}
+          </p>
           
           {/* Pediatrician Card */}
           <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>Pediatrician Contact</span>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>Contact Card</span>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span style={{ display: 'block', fontSize: '14.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Dr. Emily Watson, MD</span>
-                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>St. Mary's Children Clinic</span>
+                <span style={{ display: 'block', fontSize: '14.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{pediatrician.name}</span>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{pediatrician.clinic}</span>
               </div>
-              <a href="tel:+15550199" style={{ padding: '8px 12px', background: 'var(--baby-secondary)', color: 'var(--baby-primary)', borderRadius: '12px', fontSize: '12px', fontWeight: '700', textDecoration: 'none' }}>Call Clinic</a>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setShowDoctorForm(!showDoctorForm)}
+                  style={{ padding: '6px 10px', background: 'var(--bg-app)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: '10px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Edit
+                </button>
+                <a href={`tel:${pediatrician.phone}`} style={{ padding: '8px 12px', background: 'var(--baby-secondary)', color: 'var(--baby-primary)', borderRadius: '12px', fontSize: '12px', fontWeight: '700', textDecoration: 'none' }}>Call</a>
+              </div>
             </div>
-          </div>
 
-          {/* Vaccination Schedule */}
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.02)', borderBottom: '1px solid var(--color-border)' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Vaccination Status</span>
-            </div>
-            {[
-              { name: 'BCG (Tuberculosis)', date: 'Given: 2026-02-12', status: 'administered' },
-              { name: 'HepB Dose 1 & 2', date: 'Given: 2026-03-01', status: 'administered' },
-              { name: 'Rotavirus Dose 1', date: 'Given: 2026-04-10', status: 'administered' },
-              { name: 'DTaP-IPV-Hib Dose 1', date: 'Due: 2026-07-20', status: 'pending' },
-            ].map((vac, idx) => (
-              <div key={idx} style={{ padding: '12.5px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: idx < 3 ? '1px solid var(--color-border)' : 'none' }}>
-                <div>
-                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{vac.name}</span>
-                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{vac.date}</span>
+            {/* Doctor Edit Form */}
+            {showDoctorForm && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid var(--color-border)', paddingTop: '12px', marginTop: '4px' }}>
+                <div className="input-group">
+                  <span className="input-label">Doctor Name</span>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ padding: '8px 12px' }}
+                    value={tempDocName}
+                    onChange={(e) => setTempDocName(e.target.value)}
+                  />
                 </div>
-                <span style={{
-                  padding: '4px 8px',
-                  borderRadius: '10px',
-                  fontSize: '10px',
-                  fontWeight: '700',
-                  textTransform: 'uppercase',
-                  background: vac.status === 'administered' ? 'var(--baby-secondary)' : 'var(--dev-secondary)',
-                  color: vac.status === 'administered' ? 'var(--baby-primary)' : 'var(--dev-primary)'
-                }}>
-                  {vac.status}
-                </span>
+                <div className="input-group">
+                  <span className="input-label">Clinic Name</span>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ padding: '8px 12px' }}
+                    value={tempDocClinic}
+                    onChange={(e) => setTempDocClinic(e.target.value)}
+                  />
+                </div>
+                <div className="input-group">
+                  <span className="input-label">Phone Number</span>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ padding: '8px 12px' }}
+                    value={tempDocPhone}
+                    onChange={(e) => setTempDocPhone(e.target.value)}
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setPediatrician({
+                      name: tempDocName,
+                      clinic: tempDocClinic,
+                      phone: tempDocPhone
+                    });
+                    setShowDoctorForm(false);
+                    alert('Pediatrician details updated successfully!');
+                  }}
+                  className="btn-primary"
+                  style={{ padding: '8px', fontSize: '12.5px', borderRadius: '10px', background: 'var(--baby-primary)' }}
+                >
+                  Save Doctor Info
+                </button>
               </div>
-            ))}
+            )}
           </div>
 
           {/* Allergies & Notes */}
@@ -3243,11 +4019,56 @@ function MoreModule({
         </div>
       )}
 
+      {/* VIEW 7b: VACCINES TRACKER */}
+      {activeSubView === 'vaccines_schedule' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Vaccination Schedule</h2>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
+            Tap vaccine rows to toggle administration status.
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+            {(currentBaby.vaccineSchedule || []).map((vac: any, idx: number) => (
+              <div
+                key={idx}
+                onClick={() => {
+                  const updatedSchedule = (currentBaby.vaccineSchedule || []).map((item: any) =>
+                    item.name === vac.name ? { ...item, status: item.status === 'administered' ? 'pending' : 'administered', date: item.status === 'administered' ? 'Due: Upcoming' : `Given: ${new Date().toISOString().split('T')[0]}` } : item
+                  );
+                  const updated = children.map((c, i) => i === activeChildIndex ? { ...c, vaccineSchedule: updatedSchedule } : c);
+                  setChildren(updated);
+                  localStorage.setItem('bamudi_children', JSON.stringify(updated));
+                }}
+                style={{ padding: '12.5px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: idx < (currentBaby.vaccineSchedule || []).length - 1 ? '1px solid var(--color-border)' : 'none', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                className="vaccine-row-item"
+              >
+                <div>
+                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{vac.name}</span>
+                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{vac.date}</span>
+                </div>
+                <span style={{
+                  padding: '4px 8px',
+                  borderRadius: '10px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  background: vac.status === 'administered' ? 'var(--color-success-bg)' : 'var(--dev-secondary)',
+                  color: vac.status === 'administered' ? 'var(--color-success)' : 'var(--dev-primary)',
+                  border: vac.status === 'administered' ? '1px solid var(--color-success)' : '1px solid var(--color-border)'
+                }}>
+                  {vac.status === 'administered' ? 'Given ✓' : 'Pending'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* VIEW 8: PHOTOS & MEMORIES */}
       {activeSubView === 'memories' && (
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Nursery Photo Log</h2>
+            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Photo Log</h2>
             <button
               onClick={() => alert('Simulator Photo Upload dialog opened!')}
               className="badge"
@@ -3256,6 +4077,9 @@ function MoreModule({
               <Camera size={12} style={{ marginRight: '4px' }} /> Add Photo
             </button>
           </div>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
+            Logged by Mother {authName} for active child {currentBaby.name} ({currentBaby.gender})
+          </p>
 
           {/* Memories grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -3281,7 +4105,7 @@ function MoreModule({
       {activeSubView === 'nursery_notes' && (
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Nursery Logs</h2>
+            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Nursery Logs</h2>
             <button
               onClick={() => alert('New nursery note dialog!')}
               className="badge"
@@ -3290,6 +4114,9 @@ function MoreModule({
               <Plus size={12} /> Add Note
             </button>
           </div>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
+            Logged by Mother {authName} for active child {currentBaby.name} ({currentBaby.gender})
+          </p>
 
           {/* Timeline of nursery logs */}
           <div className="timeline-container" style={{ '--theme-color': 'var(--dev-primary)' } as React.CSSProperties}>
@@ -3413,6 +4240,80 @@ function MoreModule({
           </div>
         </div>
       )}
+
+      {/* VIEW 14: CHANGE PASSWORD */}
+      {activeSubView === 'change_password' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Change Password</h2>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-8px' }}>
+            Update your account password for mother profile: {authName}.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '14px', marginTop: '4px' }}>
+            <div className="input-group">
+              <span className="input-label">Current Password</span>
+              <input
+                type="password"
+                className="input-field"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+            </div>
+            
+            <div className="input-group">
+              <span className="input-label">New Password</span>
+              <input
+                type="password"
+                className="input-field"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+
+            <div className="input-group">
+              <span className="input-label">Confirm New Password</span>
+              <input
+                type="password"
+                className="input-field"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                  alert('Please fill out all password fields!');
+                  return;
+                }
+                if (oldPassword !== authPassword) {
+                  alert('Current password does not match!');
+                  return;
+                }
+                if (newPassword !== confirmPassword) {
+                  alert('New passwords do not match!');
+                  return;
+                }
+                setAuthPassword(newPassword);
+                setOldPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                alert('Password changed successfully!');
+                setActiveSubView('menu');
+              }}
+              className="btn-primary"
+              style={{ background: 'var(--mother-primary)', borderRadius: '12px', marginTop: '10px' }}
+            >
+              Update Password
+            </button>
+          </div>
+        </div>
+      )}
+
 
     </div>
   );
