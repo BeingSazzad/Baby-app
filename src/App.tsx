@@ -27,8 +27,7 @@ import {
   Clock,
   Activity,
   Award,
-  BookMarked,
-  LayoutGrid
+  BookMarked
 } from 'lucide-react';
 
 // Interfaces
@@ -1208,7 +1207,6 @@ export default function App() {
                       setLanguage={setLanguage}
                       handleLogout={handleLogout}
                       calendarEvents={calendarEvents}
-                      setActiveTab={setActiveTab}
                     />
                   )}
 
@@ -1245,8 +1243,8 @@ export default function App() {
                       <span className="nav-tab-label">Articles</span>
                     </button>
                     <button className={`nav-tab-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
-                      <LayoutGrid size={20} />
-                      <span className="nav-tab-label">More</span>
+                      <User size={20} />
+                      <span className="nav-tab-label">Profile</span>
                     </button>
                   </div>
                 </>
@@ -2197,8 +2195,7 @@ function MoreModule({
   language,
   setLanguage,
   handleLogout,
-  calendarEvents,
-  setActiveTab
+  calendarEvents
 }: {
   authName: string;
   currentBaby: any;
@@ -2210,7 +2207,6 @@ function MoreModule({
   setLanguage: (val: string) => void;
   handleLogout: () => void;
   calendarEvents: CalendarEvent[];
-  setActiveTab: any;
 }) {
   const [activeSubView, setActiveSubView] = useState<'menu' | 'profile_info' | 'growth_tracker' | 'reminders' | 'settings' | 'invite_partner'>('menu');
   const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head' | 'bmi'>('weight');
@@ -2257,83 +2253,155 @@ function MoreModule({
         </button>
       )}
 
-      {/* VIEW 1: MENU LANDING */}
+      {/* VIEW 1: MENU LANDING (Profile Settings List View) */}
       {activeSubView === 'menu' && (
-        <>
-          {/* Baby Card Summary */}
-          <div className="premium-card floating" style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '16px' }}>
-            <img
-              src="/mother_baby.png"
-              alt="Baby avatar"
-              style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #FFF', boxShadow: 'var(--shadow-sm)' }}
-            />
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Cover Header and Avatar Profile Block */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 4px', marginBottom: '8px' }}>
+            <div style={{ position: 'relative' }}>
+              <img
+                src="/mother_baby.png"
+                alt="Baby avatar"
+                style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '50%', border: '2.5px solid var(--baby-primary)', boxShadow: 'var(--shadow-sm)' }}
+              />
+              <div style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--baby-primary)', color: '#FFF', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #FFF', fontSize: '9px', fontWeight: 'bold' }}>
+                👶
+              </div>
+            </div>
             <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--color-text-primary)' }}>{currentBaby.name}'s Profile</h3>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginTop: '2px' }}>{ageString}</p>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text-primary)' }}>{currentBaby.name}'s Profile</h3>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '12.5px', marginTop: '2px', fontWeight: '500' }}>Age: {ageString}</p>
             </div>
             <button
               onClick={() => setActiveSubView('profile_info')}
-              style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+              style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
             >
-              View Profile
+              Edit
             </button>
           </div>
 
-          {/* Menu Grid */}
-          <div className="more-menu-grid">
-            <div className="more-menu-item" style={{ '--theme-color': 'var(--baby-primary)', '--theme-bg': 'var(--baby-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('profile_info')}>
-              <div className="more-menu-icon">
-                <User size={20} />
+          {/* Section: Profile & Baby Info */}
+          <span className="profile-section-title">Profile & Baby Tracker</span>
+          <div className="profile-list-group">
+            <div className="profile-list-row" onClick={() => setActiveSubView('profile_info')} style={{ '--theme-color': 'var(--baby-primary)', '--theme-bg': 'var(--baby-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <User size={18} />
               </div>
-              <span className="more-menu-title">Profile Info</span>
-              <span className="more-menu-desc">Baby profile, birth record, personal info</span>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Profile Details</span>
+                <span className="profile-row-desc">Baby DOB, gender, and mother's metadata</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
 
-            <div className="more-menu-item" style={{ '--theme-color': 'var(--dev-primary)', '--theme-bg': 'var(--dev-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('growth_tracker')}>
-              <div className="more-menu-icon">
-                <TrendingUp size={20} />
+            <div className="profile-list-row" onClick={() => setActiveSubView('growth_tracker')} style={{ '--theme-color': 'var(--dev-primary)', '--theme-bg': 'var(--dev-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <TrendingUp size={18} />
               </div>
-              <span className="more-menu-title">Growth</span>
-              <span className="more-menu-desc">Track weight, height & growth percentiles</span>
-            </div>
-
-            <div className="more-menu-item" style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('reminders')}>
-              <div className="more-menu-icon">
-                <Clock size={20} />
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Growth Logs</span>
+                <span className="profile-row-desc">Weight, height, and head circumference</span>
               </div>
-              <span className="more-menu-title">Reminders</span>
-              <span className="more-menu-desc">Diaper logs, vitamin alerts, checkups</span>
-            </div>
-
-            <div className="more-menu-item" style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('invite_partner')}>
-              <div className="more-menu-icon">
-                <Share2 size={20} />
-              </div>
-              <span className="more-menu-title">Invite Partner</span>
-              <span className="more-menu-desc">Track vaccine and growth together</span>
-            </div>
-
-            <div className="more-menu-item" style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties} onClick={() => setActiveSubView('settings')}>
-              <div className="more-menu-icon">
-                <Settings size={20} />
-              </div>
-              <span className="more-menu-title">Settings</span>
-              <span className="more-menu-desc">Dark mode theme, language, FAQs</span>
-            </div>
-
-            <div className="more-menu-item" style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties} onClick={() => setActiveTab('articles')}>
-              <div className="more-menu-icon">
-                <BookOpen size={20} />
-              </div>
-              <span className="more-menu-title">Guides & Tips</span>
-              <span className="more-menu-desc">Baby sleep, feeding, self-care guides</span>
+              <span className="profile-row-value">{currentBaby.weight} kg</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
           </div>
 
-          <button onClick={handleLogout} className="btn-secondary" style={{ color: 'var(--reminder-primary)', borderColor: 'var(--reminder-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '24px', borderRadius: '16px' }}>
-            <LogOut size={16} /> Logout Account
-          </button>
-        </>
+          {/* Section: Daily Sync */}
+          <span className="profile-section-title">Co-Parent & Tasks</span>
+          <div className="profile-list-group">
+            <div className="profile-list-row" onClick={() => setActiveSubView('invite_partner')} style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Share2 size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Invite Partner (Father)</span>
+                <span className="profile-row-desc">Real-time sync checklist & growth logs</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setActiveSubView('reminders')} style={{ '--theme-color': 'var(--cal-primary)', '--theme-bg': 'var(--cal-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Clock size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">System Reminders</span>
+                <span className="profile-row-desc">Diaper changing, vaccination, vitamins</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+
+          {/* Section: Preferences */}
+          <span className="profile-section-title">Preferences</span>
+          <div className="profile-list-group">
+            <div className="profile-list-row" onClick={() => setActiveSubView('settings')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Settings size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">App Theme</span>
+                <span className="profile-row-desc">Configure dark mode and appearance</span>
+              </div>
+              <span className="profile-row-value">{isDarkMode ? 'Dark' : 'Light'}</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setLanguage(language === 'English' ? 'Danish' : 'English')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Smartphone size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Language</span>
+                <span className="profile-row-desc">Switch default text language</span>
+              </div>
+              <span className="profile-row-value">{language}</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+
+          {/* Section: Security & Nursery Legal */}
+          <span className="profile-section-title">Safety & Security</span>
+          <div className="profile-list-group">
+            <div className="profile-list-row" onClick={() => alert('Simulated Nursery Privacy Policy loaded!')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Bookmark size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Privacy Policy</span>
+                <span className="profile-row-desc">Data protection and nursery encryption standards</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => alert('Simulated Nursery Terms of Service loaded!')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <BookOpen size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Terms & Conditions</span>
+                <span className="profile-row-desc">Usage policies, licensing, and compliance guidelines</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+
+          {/* Section: Logout */}
+          <div className="profile-list-group" style={{ marginTop: '16px', marginBottom: '24px' }}>
+            <div className="profile-list-row" onClick={handleLogout} style={{ '--theme-color': 'var(--reminder-primary)', '--theme-bg': 'var(--reminder-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <LogOut size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title" style={{ color: 'var(--reminder-primary)' }}>Log Out Account</span>
+                <span className="profile-row-desc">Securely sign out of {authName}'s session</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* VIEW 2: PROFILE INFO */}
