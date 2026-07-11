@@ -132,6 +132,16 @@ const initialMilestones: MilestoneItem[] = [
   { id: 'm_cog2', title: 'Reaches for toys', category: 'cognitive', status: 'in_progress', desc: 'Stretches hand out intentionally to grab rattles or dangling crib charms.', dueMonth: 4 },
 ];
 
+const initialPregnancyMilestones: MilestoneItem[] = [
+  { id: 'p_m1', title: 'First Prenatal Scan & Visit', category: 'motor', status: 'achieved', desc: 'Confirm pregnancy, verify heartbeat, and establish due date. (Weeks 6-8)', dueMonth: -7 },
+  { id: 'p_m2', title: 'Nuchal Translucency (NT) Scan', category: 'motor', status: 'in_progress', desc: 'Ultrasound screening for developmental checkups. (Weeks 11-13)', dueMonth: -6 },
+  { id: 'p_m3', title: 'Anatomy Scan (20-week Ultrasound)', category: 'motor', status: 'upcoming', desc: 'Detailed ultrasound of baby organs and structural development. (Weeks 18-22)', dueMonth: -4 },
+  { id: 'p_c1', title: 'Feel Baby Flutter Kicks', category: 'communication', status: 'upcoming', desc: 'First subtle movements (quickening) felt in lower abdomen. (Weeks 18-24)', dueMonth: -4 },
+  { id: 'p_c2', title: 'Glucose Tolerance Screening', category: 'communication', status: 'upcoming', desc: 'Routine test to screen for gestational maternal sugar levels. (Weeks 24-28)', dueMonth: -3 },
+  { id: 'p_cog1', title: 'Register for Childbirth Classes', category: 'cognitive', status: 'upcoming', desc: 'Learn about labor stages, breathing, and diapering basics. (Weeks 30-32)', dueMonth: -2 },
+  { id: 'p_cog2', title: 'Group B Strep (GBS) Screening', category: 'cognitive', status: 'upcoming', desc: 'Pre-birth maternal safety swab test. (Weeks 35-37)', dueMonth: -1 }
+];
+
 const initialArticles: Article[] = [
   {
     id: 'art1',
@@ -201,6 +211,159 @@ const calculateAgeInMonths = (dobString: string): number => {
   return months >= 0 ? months : 0;
 };
 
+// Dynamic phase determination
+const getChildPhase = (dobString: string): 'pregnancy' | 'newborn' | 'infant' | 'toddler' => {
+  const dob = new Date(dobString);
+  const today = new Date();
+  if (today < dob) return 'pregnancy';
+  
+  const diffTime = today.getTime() - dob.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const months = Math.floor(diffDays / 30.4);
+  
+  if (months < 1) return 'newborn';
+  if (months < 6) return 'infant';
+  return 'toddler';
+};
+
+// Dynamic backgrounds for simulator phone screen
+const getDynamicBackground = (phase: 'pregnancy' | 'newborn' | 'infant' | 'toddler') => {
+  if (phase === 'pregnancy') {
+    return 'linear-gradient(180deg, #FFF5F7 0%, #FFEBEF 50%, #FFF5F7 100%)';
+  } else if (phase === 'newborn') {
+    return 'linear-gradient(180deg, #FFFDFB 0%, #FFF3EA 50%, #FFFDF9 100%)';
+  } else if (phase === 'infant') {
+    return 'linear-gradient(180deg, #F9FDFB 0%, #E6F7ED 50%, #F5FCF8 100%)';
+  } else {
+    return 'linear-gradient(180deg, #F7FAFC 0%, #EAF2F8 50%, #F4F8FA 100%)';
+  }
+};
+
+// Dynamic gestation details
+const calculatePregnancyInfo = (dueDateStr: string) => {
+  const due = new Date(dueDateStr);
+  const today = new Date();
+  const lmp = new Date(due.getTime() - (280 * 24 * 60 * 60 * 1000));
+  const diffTime = today.getTime() - lmp.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const gestationWeek = Math.max(1, Math.min(40, Math.floor(diffDays / 7) + 1));
+  const remainingDays = Math.max(0, Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+  
+  let fruit = '🍋 Lemon';
+  let sizeDesc = 'Baby is about 8.5 cm long and weighs around 43 grams.';
+  let extraDesc = 'Fingerprints are starting to form!';
+  
+  if (gestationWeek <= 7) {
+    fruit = 'Poppy Seed 🫘';
+    sizeDesc = 'Baby is about 0.1 cm long and weighs under 1 gram.';
+    extraDesc = 'Major organs are starting to form!';
+  } else if (gestationWeek <= 11) {
+    fruit = 'Raspberry 🍓';
+    sizeDesc = 'Baby is about 1.6 cm long and weighs around 1 gram.';
+    extraDesc = 'Baby is starting to wiggle their tiny limbs!';
+  } else if (gestationWeek <= 15) {
+    fruit = 'Lemon 🍋';
+    sizeDesc = 'Baby is about 8.5 cm long and weighs around 43 grams.';
+    extraDesc = 'Fingerprints are starting to form!';
+  } else if (gestationWeek <= 19) {
+    fruit = 'Avocado 🥑';
+    sizeDesc = 'Baby is about 12 cm long and weighs around 150 grams.';
+    extraDesc = 'Baby can now hear your heartbeat and voice!';
+  } else if (gestationWeek <= 23) {
+    fruit = 'Banana 🍌';
+    sizeDesc = 'Baby is about 26 cm long and weighs around 360 grams.';
+    extraDesc = 'Baby is developing sleep-wake cycles!';
+  } else if (gestationWeek <= 27) {
+    fruit = 'Cauliflower 🥦';
+    sizeDesc = 'Baby is about 36 cm long and weighs around 900 grams.';
+    extraDesc = 'Baby is now opening and closing their eyes!';
+  } else if (gestationWeek <= 31) {
+    fruit = 'Eggplant 🍆';
+    sizeDesc = 'Baby is about 40 cm long and weighs around 1.5 kilograms.';
+    extraDesc = 'Baby is gaining body fat and growing fast!';
+  } else if (gestationWeek <= 35) {
+    fruit = 'Melon 🍈';
+    sizeDesc = 'Baby is about 45 cm long and weighs around 2.2 kilograms.';
+    extraDesc = 'Baby is getting snug in your womb!';
+  } else {
+    fruit = 'Watermelon 🍉';
+    sizeDesc = 'Baby is about 50 cm long and weighs around 3.2 kilograms.';
+    extraDesc = 'Baby is fully developed and ready to meet you!';
+  }
+  
+  let trimester = '1st Trimester';
+  if (gestationWeek > 27) trimester = '3rd Trimester';
+  else if (gestationWeek > 13) trimester = '2nd Trimester';
+  
+  return {
+    gestationWeek,
+    remainingDays,
+    trimester,
+    fruit,
+    sizeDesc,
+    extraDesc
+  };
+};
+
+// Dynamic age-based default checklists
+const getChecklistForAge = (dobString: string): ChecklistItem[] => {
+  const dob = new Date(dobString);
+  const today = new Date();
+  
+  if (today < dob) {
+    // Pregnancy Phase
+    return [
+      { id: 'p1', task: 'Take Prenatal Vitamins', time: '09:00 AM', completed: false, category: 'daily', desc: 'Folic acid & iron booster' },
+      { id: 'p2', task: 'Track Fetal Kicks', time: '02:00 PM', completed: false, category: 'daily', desc: 'Aim for 10 kicks in 1 hour' },
+      { id: 'p3', task: 'Pelvic Floor Exercises', time: '05:00 PM', completed: false, category: 'daily', desc: 'Kegel stretch' },
+      { id: 'p4', task: 'Hydration Check (2.5L)', time: 'All Day', completed: false, category: 'daily', desc: 'Water intake log' },
+      { id: 'p5', task: 'Prenatal Walk (20m)', time: '06:30 PM', completed: false, category: 'daily', desc: 'Gentle aerobic exercise' },
+      { id: 'pw1', task: 'Moisturize stretching areas', time: 'Every Sunday', completed: false, category: 'weekly', desc: 'Soften stretch marks' },
+      { id: 'pw2', task: 'Track blood pressure', time: 'Every Wednesday', completed: false, category: 'weekly', desc: 'Log clinic indicators' },
+      { id: 'pm1', task: 'Pack hospital delivery bag', time: '1st of Month', completed: false, category: 'monthly', desc: 'Prepare postpartum gear' }
+    ];
+  }
+
+  const diffTime = today.getTime() - dob.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const months = Math.floor(diffDays / 30.4);
+
+  if (months < 1) {
+    // Newborn (0-1 Month)
+    return [
+      { id: 'n1', task: 'Morning Breastfeed / Formula', time: '08:00 AM', completed: true, category: 'daily', desc: 'Log feeding duration' },
+      { id: 'n2', task: 'Vitamin D3 Drops', time: '09:30 AM', completed: false, category: 'daily', desc: '400 IU standard dose' },
+      { id: 'n3', task: 'Postpartum Mother Nap', time: '01:00 PM', completed: true, category: 'daily', desc: 'Rest when infant sleeps' },
+      { id: 'n4', task: 'Diaper Change check', time: '04:00 PM', completed: false, category: 'daily', desc: 'Log wet diaper count' },
+      { id: 'n5', task: 'Skin-to-Skin Session', time: '06:00 PM', completed: false, category: 'daily', desc: '30 mins chest contact' },
+      { id: 'nw1', task: 'Sterilize pacifiers & bottles', time: 'Every Sunday', completed: false, category: 'weekly', desc: 'Keep nursery gear clean' },
+      { id: 'nm1', task: 'Wash baby crib bedding sheets', time: '1st of Month', completed: false, category: 'monthly', desc: 'Hypoallergenic cleaning' }
+    ];
+  } else if (months < 6) {
+    // Infant (1-6 Months)
+    return [
+      { id: 'i1', task: 'Morning Feed Session', time: '08:00 AM', completed: true, category: 'daily', desc: 'Nurse or formula check' },
+      { id: 'i2', task: 'Vitamin D3 Drops', time: '09:00 AM', completed: false, category: 'daily', desc: 'Give after morning sunlight' },
+      { id: 'i3', task: 'Tummy Time Practice', time: '10:30 AM', completed: true, category: 'daily', desc: '15-20 mins head strength' },
+      { id: 'i4', task: 'Read High-Contrast Book', time: '03:00 PM', completed: false, category: 'daily', desc: 'Stimulate sensory tracking' },
+      { id: 'i5', task: 'Bedtime Bath & Massage', time: '07:30 PM', completed: false, category: 'daily', desc: 'Relaxing sleep routine' },
+      { id: 'iw1', task: 'Trim baby fingernails safely', time: 'Every Friday', completed: false, category: 'weekly', desc: 'Avoid face scratching' },
+      { id: 'im1', task: 'Wash teething toys & gym', time: '1st of Month', completed: false, category: 'monthly', desc: 'Sterilize nursery toys' }
+    ];
+  } else {
+    // Toddler (6-18 Months)
+    return [
+      { id: 't1', task: 'Morning solid food breakfast', time: '08:30 AM', completed: true, category: 'daily', desc: 'Oats, mashed purees, iron-rich solid' },
+      { id: 't2', task: 'Offer water in open cup', time: '11:00 AM', completed: false, category: 'daily', desc: 'Practice open cup swallowing' },
+      { id: 't3', task: 'Crawling & Motor Play', time: '02:00 PM', completed: true, category: 'daily', desc: 'Place toys just out of reach' },
+      { id: 't4', task: 'Afternoon Solid Snack', time: '04:00 PM', completed: false, category: 'daily', desc: 'Soft fruits or steamed carrots' },
+      { id: 't5', task: 'Bedtime story & sleep transition', time: '07:30 PM', completed: false, category: 'daily', desc: 'Quiet book reading' },
+      { id: 'tw1', task: 'Track height and weight metrics', time: 'Every Friday', completed: false, category: 'weekly', desc: 'Log metrics in growth history' },
+      { id: 'tm1', task: 'Inspect baby-proof locks & plugs', time: '15th of Month', completed: false, category: 'monthly', desc: 'Verify electrical outlet safety' }
+    ];
+  }
+};
+
 // Dynamic baby checkup reminders based on DOB (days after birth)
 const getBabyCalendarEvents = (baby: ChildProfile): CalendarEvent[] => {
   const birth = new Date(baby.dob);
@@ -249,6 +412,37 @@ const getBabyMilestones = (baby: ChildProfile): MilestoneItem[] => {
   if (baby.milestones && baby.milestones.length > 0) {
     return baby.milestones;
   }
+  
+  const today = new Date();
+  const dob = new Date(baby.dob);
+  
+  if (today < dob) {
+    // Unborn -> Pregnancy Milestones
+    const diffTime = dob.getTime() - today.getTime();
+    const remainingDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const gestationWeek = Math.max(1, Math.min(40, 40 - Math.floor(remainingDays / 7)));
+    
+    return initialPregnancyMilestones.map(m => {
+      let status: 'achieved' | 'in_progress' | 'upcoming' = 'upcoming';
+      let targetWeek = 20;
+      if (m.id === 'p_m1') targetWeek = 8;
+      else if (m.id === 'p_m2') targetWeek = 13;
+      else if (m.id === 'p_m3') targetWeek = 20;
+      else if (m.id === 'p_c1') targetWeek = 22;
+      else if (m.id === 'p_c2') targetWeek = 26;
+      else if (m.id === 'p_cog1') targetWeek = 31;
+      else if (m.id === 'p_cog2') targetWeek = 36;
+      
+      if (gestationWeek > targetWeek) {
+        status = 'achieved';
+      } else if (gestationWeek >= targetWeek - 2) {
+        status = 'in_progress';
+      }
+      return { ...m, status };
+    });
+  }
+  
+  // Born -> Baby Milestones
   const ageInMonths = calculateAgeInMonths(baby.dob);
   return initialMilestones.map(m => {
     let status: 'achieved' | 'in_progress' | 'upcoming' = 'upcoming';
@@ -281,8 +475,26 @@ export default function App() {
   // User Profile States
   const [motherPhase, setMotherPhase] = useState<'pregnancy' | 'baby'>('baby');
   const [selectedPhase, setSelectedPhase] = useState<string>(() => localStorage.getItem('bamudi_selected_phase') || 'early');
-  const [pregnancyWeek] = useState(24);
   const [interests, setInterests] = useState<string[]>(['feeding', 'sleep', 'growth', 'activities']);
+
+  // Pregnancy Kick Counter states
+  const [pregnancyKicks, setPregnancyKicks] = useState<number>(() => {
+    return parseInt(localStorage.getItem('bamudi_kick_count') || '0', 10);
+  });
+  const [kickHistory, setKickHistory] = useState<{ time: string; count: number }[]>(() => {
+    return JSON.parse(localStorage.getItem('bamudi_kick_history') || '[]');
+  });
+
+  // Sync kicks to local storage
+  useEffect(() => {
+    localStorage.setItem('bamudi_kick_count', String(pregnancyKicks));
+  }, [pregnancyKicks]);
+
+  useEffect(() => {
+    localStorage.setItem('bamudi_kick_history', JSON.stringify(kickHistory));
+  }, [kickHistory]);
+
+
   
   // Child States
   const [children, setChildren] = useState<ChildProfile[]>(() => {
@@ -347,10 +559,10 @@ export default function App() {
       if (activeBaby.checklist && activeBaby.checklist.length > 0) {
         setChecklist(activeBaby.checklist);
       } else {
-        setChecklist(initialChecklist);
+        setChecklist(getChecklistForAge(activeBaby.dob));
       }
     }
-  }, [activeChildIndex]);
+  }, [activeChildIndex, children]);
 
   useEffect(() => {
     if (children.length > 0 && children[activeChildIndex]) {
@@ -363,7 +575,17 @@ export default function App() {
         localStorage.setItem('bamudi_children', JSON.stringify(updatedChildren));
       }
     }
-  }, [checklist, activeChildIndex]);
+  }, [checklist, activeChildIndex, children]);
+
+  // Dynamic automatic motherPhase synchronization based on active baby's DOB
+  useEffect(() => {
+    const activeBaby = children[activeChildIndex];
+    if (activeBaby) {
+      const today = new Date();
+      const dob = new Date(activeBaby.dob);
+      setMotherPhase(today < dob ? 'pregnancy' : 'baby');
+    }
+  }, [activeChildIndex, children]);
 
   const [profileSubView, setProfileSubView] = useState<string>(() => localStorage.getItem('bamudi_profile_subview') || 'menu');
 
@@ -780,7 +1002,14 @@ export default function App() {
           )}
 
           {/* Phone Bezel Interior Screen */}
-          <div className={`phone-screen ${isDarkMode ? 'dark-mode' : ''}`}>
+          <div
+            className={`phone-screen ${isDarkMode ? 'dark-mode' : ''}`}
+            style={{
+              background: getDynamicBackground(
+                currentBaby ? getChildPhase(currentBaby.dob) : 'newborn'
+              )
+            }}
+          >
             
             {/* Status Bar */}
             <div className="phone-status-bar">
@@ -1355,55 +1584,253 @@ export default function App() {
               {appFlow === 'dashboard' && (
                 <>
                   {activeArticle ? (
-                    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '80px', '--theme-color': 'var(--article-primary)' } as React.CSSProperties}>
+                    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '90px', '--theme-color': 'var(--article-primary)' } as React.CSSProperties}>
                       {/* Back Header */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)', marginBottom: '16px' }}>
-                        <button onClick={() => setActiveArticle(null)} style={{ background: 'none', border: 'none', color: 'var(--article-primary)', fontSize: '14px', fontWeight: '750', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          ← Back
+                        <button onClick={() => setActiveArticle(null)} style={{ background: 'none', border: 'none', color: 'var(--article-primary)', fontSize: '14.5px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <ChevronLeft size={16} /> Back
                         </button>
                         <div style={{ display: 'flex', gap: '10px' }}>
                           <button
                             onClick={() => toggleSaveArticle(activeArticle.id)}
-                            style={{ background: 'none', border: 'none', color: activeArticle.saved ? 'var(--article-primary)' : 'var(--color-text-secondary)', cursor: 'pointer' }}
+                            style={{ background: 'none', border: 'none', color: activeArticle.saved ? 'var(--article-primary)' : 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
                           >
                             <Bookmark size={20} fill={activeArticle.saved ? 'var(--article-primary)' : 'none'} />
                           </button>
-                          <button style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                          <button onClick={() => alert('Article link copied to clipboard!')} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}>
                             <Share2 size={20} />
                           </button>
                         </div>
                       </div>
 
                       {/* Cover Photo */}
-                      <img
-                        src={activeArticle.id === 'art1' || activeArticle.id === 'art3' ? '/baby_sleep.png' : activeArticle.id === 'art2' ? '/mother_baby.png' : '/pregnancy.png'}
-                        alt={activeArticle.title}
-                        style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '16px', marginBottom: '16px' }}
-                      />
+                      <div style={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', boxShadow: 'var(--shadow-premium)', marginBottom: '20px', height: '180px' }}>
+                        <img
+                          src={activeArticle.id === 'art1' || activeArticle.id === 'art3' ? '/baby_sleep.png' : activeArticle.id === 'art2' ? '/mother_baby.png' : '/pregnancy.png'}
+                          alt={activeArticle.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <div style={{ position: 'absolute', bottom: '12px', left: '12px' }}>
+                          <span className="badge badge-article" style={{ boxShadow: 'var(--shadow-sm)', ...getCategoryBadgeStyle(activeArticle.category) }}>
+                            {activeArticle.category}
+                          </span>
+                        </div>
+                      </div>
 
-                      {/* Metadata */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', textAlign: 'left' }}>
-                        <span className="badge badge-article" style={{ alignSelf: 'flex-start', ...getCategoryBadgeStyle(activeArticle.category) }}>{activeArticle.category}</span>
-                        <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', lineHeight: '1.3' }}>{activeArticle.title}</h2>
-                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>By {activeArticle.author} • {activeArticle.readTime} • {activeArticle.date}</span>
+                      {/* Title & Metadata */}
+                      <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                        <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', lineHeight: '1.25', letterSpacing: '-0.02em' }}>
+                          {activeArticle.title}
+                        </h2>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--article-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                            ✍️
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{activeArticle.author}</span>
+                            <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)' }}>{activeArticle.readTime} • Verified Expert Guide</span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Content Body */}
-                      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', color: 'var(--color-text-primary)', fontSize: '14.5px', lineHeight: '1.6', textAlign: 'left' }}>
-                        <p style={{ fontWeight: '600', marginBottom: '14px', color: 'var(--color-text-secondary)', fontSize: '15px' }}>{activeArticle.summary}</p>
-                        <p style={{ whiteSpace: 'pre-line' }}>{activeArticle.content}</p>
+                      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '20px', color: 'var(--color-text-primary)', fontSize: '14.5px', lineHeight: '1.65', textAlign: 'left' }}>
+                        {/* Summary Block */}
+                        <div style={{
+                          backgroundColor: 'var(--article-secondary)',
+                          borderLeft: '4px solid var(--article-primary)',
+                          borderRadius: '12px',
+                          padding: '14px 16px',
+                          marginBottom: '20px',
+                          color: 'var(--color-text-primary)',
+                          fontSize: '14px',
+                          fontWeight: '550'
+                        }}>
+                          {activeArticle.summary}
+                        </div>
+
+                        {/* Article Main Text paragraphs */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
+                          {activeArticle.content.split('\n').map((p, i) => (
+                            <p key={i} style={{ margin: 0 }}>{p}</p>
+                          ))}
+                        </div>
+
+                        {/* Key takeaways callout block */}
+                        <div style={{
+                          backgroundColor: '#FFFDF9',
+                          border: '1.5px dashed var(--dev-primary)',
+                          borderRadius: '20px',
+                          padding: '16px',
+                          marginTop: '24px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px'
+                        }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', color: 'var(--dev-primary)', textTransform: 'uppercase' }}>
+                            💡 Key Takeaway
+                          </span>
+                          <p style={{ fontSize: '13px', color: 'var(--color-text-primary)', margin: 0, lineHeight: '1.5' }}>
+                            {activeArticle.id === 'art1' && 'Breastmilk or formula remains the core source of food. Don\'t rush solids without pediatric alignment.'}
+                            {activeArticle.id === 'art2' && 'Narrate simple activities, read together, and sensory-explore textures to stimulate synaptic links.'}
+                            {activeArticle.id === 'art3' && 'Always follow bare-crib guidelines. Keep room temperature moderate and use light sleep sacks.'}
+                            {activeArticle.id === 'art4' && 'Postpartum healing is slow. Give yourself space, hydrate, rest when possible, and accept support.'}
+                          </p>
+                        </div>
                       </div>
 
                       {/* Read status toggle at bottom */}
                       <button
                         className="btn-primary"
-                        style={{ marginTop: '24px', backgroundColor: activeArticle.read ? 'var(--color-border)' : 'var(--article-primary)', color: activeArticle.read ? 'var(--color-text-primary)' : '#FFF' }}
+                        style={{
+                          marginTop: '28px',
+                          backgroundColor: activeArticle.read ? 'var(--color-border)' : 'var(--article-primary)',
+                          color: activeArticle.read ? 'var(--color-text-primary)' : '#FFF',
+                          borderRadius: '16px',
+                          padding: '12px',
+                          fontSize: '14.5px',
+                          fontWeight: '700',
+                          boxShadow: activeArticle.read ? 'none' : '0 4px 14px rgba(138, 107, 255, 0.25)'
+                        }}
                         onClick={() => {
                           toggleReadArticle(activeArticle.id);
                         }}
                       >
-                        {activeArticle.read ? 'Mark as Unread' : 'Mark as Read'}
+                        {activeArticle.read ? 'Mark as Unread' : 'Mark as Read ✓'}
                       </button>
+                    </div>
+                  ) : showNotifications ? (
+                    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '90px', '--theme-color': 'var(--mother-primary)' } as React.CSSProperties}>
+                      {/* Back Header */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)', marginBottom: '16px' }}>
+                        <button onClick={() => setShowNotifications(false)} style={{ background: 'none', border: 'none', color: 'var(--mother-primary)', fontSize: '14.5px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <ChevronLeft size={16} /> Back
+                        </button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          {notifications.some(n => !n.read) && (
+                            <button
+                              onClick={() => {
+                                setNotifications(notifications.map(n => ({ ...n, read: true })));
+                              }}
+                              style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '12.5px', fontWeight: '750', cursor: 'pointer' }}
+                            >
+                              Mark read
+                            </button>
+                          )}
+                          {notifications.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setNotifications([]);
+                              }}
+                              style={{ background: 'none', border: 'none', color: 'var(--reminder-primary)', fontSize: '12.5px', fontWeight: '750', cursor: 'pointer' }}
+                            >
+                              Clear all
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Header title */}
+                      <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                        <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)' }}>Notifications 🔔</h2>
+                        <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                          Stay updated with clinical visits, developmental milestones, and spouse sync activities.
+                        </p>
+                      </div>
+
+                      {/* Notification list container */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {notifications.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '60px 10px', color: 'var(--color-text-secondary)' }}>
+                            <span style={{ fontSize: '48px', display: 'block', marginBottom: '10px', opacity: 0.5 }}>🔔</span>
+                            <p style={{ fontSize: '14.5px', fontWeight: '850', color: 'var(--color-text-primary)' }}>All caught up!</p>
+                            <p style={{ fontSize: '12.5px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>No new notifications are available.</p>
+                          </div>
+                        ) : (
+                          notifications.map(notif => {
+                            let iconBg = 'var(--dev-secondary)';
+                            let iconColor = 'var(--dev-primary)';
+                            let notifIcon = <Bell size={16} />;
+                            
+                            if (notif.title.includes('Vaccine')) {
+                              iconBg = 'var(--cal-secondary)';
+                              iconColor = 'var(--cal-primary)';
+                              notifIcon = <Award size={16} />;
+                            } else if (notif.title.includes('Partner')) {
+                              iconBg = 'var(--mother-secondary)';
+                              iconColor = 'var(--mother-primary)';
+                              notifIcon = <Share2 size={16} />;
+                            } else if (notif.title.includes('Milestone')) {
+                              iconBg = 'var(--baby-secondary)';
+                              iconColor = 'var(--baby-primary)';
+                              notifIcon = <TrendingUp size={16} />;
+                            } else if (notif.title.includes('Guide')) {
+                              iconBg = 'var(--article-secondary)';
+                              iconColor = 'var(--article-primary)';
+                              notifIcon = <BookOpen size={16} />;
+                            }
+                            
+                            return (
+                              <div
+                                key={notif.id}
+                                onClick={() => {
+                                  setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                                }}
+                                style={{
+                                  padding: '14px 16px',
+                                  background: notif.read ? 'var(--bg-surface)' : 'rgba(244, 107, 138, 0.04)',
+                                  border: notif.read ? '1px solid var(--color-border)' : '1px solid rgba(244, 107, 138, 0.15)',
+                                  borderRadius: '20px',
+                                  display: 'flex',
+                                  gap: '12px',
+                                  position: 'relative',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  textAlign: 'left'
+                                }}
+                              >
+                                <div style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '12px',
+                                  backgroundColor: iconBg,
+                                  color: iconColor,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}>
+                                  {notifIcon}
+                                </div>
+
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <span style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--color-text-primary)' }}>{notif.title}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ fontSize: '10px', color: 'var(--color-text-secondary)' }}>{notif.time}</span>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setNotifications(notifications.filter(n => n.id !== notif.id));
+                                        }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                      >
+                                        <Trash size={13} style={{ opacity: 0.6 }} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <p style={{ fontSize: '12.5px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.45', margin: '4px 0 0 0' }}>{notif.message}</p>
+                                </div>
+                                
+                                {!notif.read && (
+                                  <div style={{ position: 'absolute', top: '18px', left: '8px', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--mother-primary)' }}></div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <>
@@ -1425,11 +1852,14 @@ export default function App() {
                           activeChildIndex={activeChildIndex}
                           setActiveChildIndex={setActiveChildIndex}
                           motherPhase={motherPhase}
-                          pregnancyWeek={pregnancyWeek}
                           setShowNotifications={setShowNotifications}
                           notificationsCount={notifications.filter(n => !n.read).length}
                           setProfileSubView={setProfileSubView}
                           setSelectedDate={setSelectedDate}
+                          pregnancyKicks={pregnancyKicks}
+                          setPregnancyKicks={setPregnancyKicks}
+                          kickHistory={kickHistory}
+                          setKickHistory={setKickHistory}
                         />
                       )}
 
@@ -1532,11 +1962,11 @@ export default function App() {
                           : 'var(--color-text-primary)'
                     } as React.CSSProperties}
                   >
-                    <button className={`nav-tab-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+                    <button className={`nav-tab-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setActiveArticle(null); setShowNotifications(false); }}>
                       <Home size={20} />
                       <span className="nav-tab-label">Home</span>
                     </button>
-                    <button className={`nav-tab-item ${activeTab === 'checklist' ? 'active' : ''}`} onClick={() => setActiveTab('checklist')}>
+                    <button className={`nav-tab-item ${activeTab === 'checklist' ? 'active' : ''}`} onClick={() => { setActiveTab('checklist'); setActiveArticle(null); setShowNotifications(false); }}>
                       <CheckSquare size={20} />
                       <span className="nav-tab-label">Checklist</span>
                     </button>
@@ -1547,17 +1977,21 @@ export default function App() {
                       const dd = String(today.getDate()).padStart(2, '0');
                       setSelectedDate(`${yyyy}-${mm}-${dd}`);
                       setActiveTab('calendar');
+                      setActiveArticle(null);
+                      setShowNotifications(false);
                     }}>
                       <Calendar size={20} />
                       <span className="nav-tab-label">Calendar</span>
                     </button>
-                    <button className={`nav-tab-item ${activeTab === 'milestones' ? 'active' : ''}`} onClick={() => setActiveTab('milestones')}>
+                    <button className={`nav-tab-item ${activeTab === 'milestones' ? 'active' : ''}`} onClick={() => { setActiveTab('milestones'); setActiveArticle(null); setShowNotifications(false); }}>
                       <Award size={20} />
                       <span className="nav-tab-label">Milestones</span>
                     </button>
                     <button className={`nav-tab-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => {
                       setProfileSubView('menu');
                       setActiveTab('profile');
+                      setActiveArticle(null);
+                      setShowNotifications(false);
                     }}>
                       <User size={20} />
                       <span className="nav-tab-label">Profile</span>
@@ -1780,136 +2214,7 @@ export default function App() {
         </div>
       )}
 
-      {/* NOTIFICATIONS BOTTOM SHEET */}
-      {showNotifications && (
-        <div className="bottom-sheet-overlay animate-fade-in" onClick={() => setShowNotifications(false)}>
-          <div className="bottom-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
-            <div className="bottom-sheet-handle"></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Notifications</h3>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                {notifications.some(n => !n.read) && (
-                  <button
-                    onClick={() => {
-                      setNotifications(notifications.map(n => ({ ...n, read: true })));
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                  >
-                    Mark read
-                  </button>
-                )}
-                {notifications.length > 0 && (
-                  <button
-                    onClick={() => {
-                      setNotifications([]);
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'var(--reminder-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto' }}>
-              {notifications.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--color-text-secondary)' }}>
-                  <span style={{ fontSize: '36px', display: 'block', marginBottom: '10px', opacity: 0.5 }}>🔔</span>
-                  <p style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>All caught up!</p>
-                  <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>No new notifications are available.</p>
-                </div>
-              ) : (
-                notifications.map(notif => {
-                  // Determine icon details
-                  let iconBg = 'var(--dev-secondary)';
-                  let iconColor = 'var(--dev-primary)';
-                  let notifIcon = <Bell size={16} />;
-                  
-                  if (notif.title.includes('Vaccine')) {
-                    iconBg = 'var(--cal-secondary)';
-                    iconColor = 'var(--cal-primary)';
-                    notifIcon = <Award size={16} />;
-                  } else if (notif.title.includes('Partner')) {
-                    iconBg = 'var(--mother-secondary)';
-                    iconColor = 'var(--mother-primary)';
-                    notifIcon = <Share2 size={16} />;
-                  } else if (notif.title.includes('Milestone')) {
-                    iconBg = 'var(--baby-secondary)';
-                    iconColor = 'var(--baby-primary)';
-                    notifIcon = <TrendingUp size={16} />;
-                  } else if (notif.title.includes('Guide')) {
-                    iconBg = 'var(--article-secondary)';
-                    iconColor = 'var(--article-primary)';
-                    notifIcon = <BookOpen size={16} />;
-                  }
-                  
-                  return (
-                    <div
-                      key={notif.id}
-                      onClick={() => {
-                        setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
-                      }}
-                      style={{
-                        padding: '12px 14px',
-                        background: notif.read ? 'var(--bg-surface)' : 'rgba(244, 107, 138, 0.04)',
-                        border: notif.read ? '1px solid var(--color-border)' : '1px solid rgba(244, 107, 138, 0.15)',
-                        borderRadius: '16px',
-                        display: 'flex',
-                        gap: '12px',
-                        position: 'relative',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {/* Icon circle */}
-                      <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
-                        backgroundColor: iconBg,
-                        color: iconColor,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}>
-                        {notifIcon}
-                      </div>
-
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <span style={{ fontSize: '13px', fontWeight: '750', color: 'var(--color-text-primary)' }}>{notif.title}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '9px', color: 'var(--color-text-secondary)' }}>{notif.time}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setNotifications(notifications.filter(n => n.id !== notif.id));
-                              }}
-                              style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
-                            >
-                              <Trash size={13} style={{ opacity: 0.6 }} />
-                            </button>
-                          </div>
-                        </div>
-                        <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4', margin: '4px 0 0 0' }}>{notif.message}</p>
-                      </div>
-                      
-                      {!notif.read && (
-                        <div style={{ position: 'absolute', top: '16px', left: '6px', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--mother-primary)' }}></div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            <button className="btn-secondary" style={{ marginTop: '16px', width: '100%', padding: '10px', borderRadius: '12px' }} onClick={() => setShowNotifications(false)}>
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
 
     </div>
   );
@@ -2015,11 +2320,14 @@ function DashboardModule({
   activeChildIndex,
   setActiveChildIndex,
   motherPhase,
-  pregnancyWeek,
   setShowNotifications,
   notificationsCount,
   setProfileSubView,
-  setSelectedDate
+  setSelectedDate,
+  pregnancyKicks,
+  setPregnancyKicks,
+  kickHistory,
+  setKickHistory
 }: {
   authName: string;
   currentBaby: any;
@@ -2036,11 +2344,14 @@ function DashboardModule({
   activeChildIndex: number;
   setActiveChildIndex: (idx: number) => void;
   motherPhase: 'pregnancy' | 'baby';
-  pregnancyWeek: number;
   setShowNotifications: (val: boolean) => void;
   notificationsCount: number;
   setProfileSubView: (view: string) => void;
   setSelectedDate: (date: string) => void;
+  pregnancyKicks: number;
+  setPregnancyKicks: (val: number | ((prev: number) => number)) => void;
+  kickHistory: { time: string; count: number }[];
+  setKickHistory: (val: { time: string; count: number }[] | ((prev: { time: string; count: number }[]) => { time: string; count: number }[])) => void;
 }) {
   // Dynamic metrics calculations
   const pendingTasksCount = checklist.filter(t => t.category === 'daily' && !t.completed).length;
@@ -2056,6 +2367,9 @@ function DashboardModule({
 
   const upcomingMilestonesCount = milestones.filter(m => m.status === 'upcoming' || m.status === 'in_progress').length;
 
+  // Pregnancy details calculation
+  const pregInfo = motherPhase === 'pregnancy' ? calculatePregnancyInfo(currentBaby.dob) : null;
+
   const getBabyPhaseString = (dobString: string) => {
     const dob = new Date(dobString);
     const today = new Date();
@@ -2068,6 +2382,24 @@ function DashboardModule({
     if (months < 1) return 'Newborn';
     if (months < 6) return '0 - 6 Months';
     return '6 - 18 Months';
+  };
+
+  const handleLogKick = () => {
+    setPregnancyKicks(prev => prev + 1);
+  };
+
+  const handleSaveKickSession = () => {
+    if (pregnancyKicks === 0) return;
+    const now = new Date();
+    const timestampStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (' + now.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ')';
+    const newSession = { time: timestampStr, count: pregnancyKicks };
+    setKickHistory(prev => [newSession, ...prev].slice(0, 5));
+    setPregnancyKicks(0);
+    alert('Kick session saved successfully! 👣');
+  };
+
+  const handleResetKicks = () => {
+    setPregnancyKicks(0);
   };
 
   return (
@@ -2113,28 +2445,30 @@ function DashboardModule({
       </div>
 
       {/* 2. Baby Card Combined / Pregnancy Progress Card */}
-      {motherPhase === 'pregnancy' ? (
-        <div className="baby-card-combined" style={{ background: 'linear-gradient(135deg, var(--mother-gradient-start) 0%, var(--mother-gradient-end) 100%)', border: 'none', color: '#FFFFFF' }}>
-          <div className="baby-card-left">
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={28} color="#FFFFFF" />
+      {motherPhase === 'pregnancy' && pregInfo ? (
+        <div className="baby-card-combined card-mother" style={{ border: 'none', color: '#FFFFFF', padding: '20px', borderRadius: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Sparkles size={22} color="#FFFFFF" />
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.8)' }}>Gestation Timeline</span>
+                <span style={{ display: 'block', fontSize: '16px', fontWeight: '800', color: '#FFFFFF' }}>{currentBaby.name}</span>
+              </div>
             </div>
-            <div className="baby-card-info">
-              <span className="baby-card-name" style={{ color: '#FFFFFF' }}>Expected Baby</span>
-              <span className="baby-card-age" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                {(() => {
-                  const target = new Date(currentBaby.dob);
-                  const today = new Date();
-                  const diffTime = target.getTime() - today.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  return diffDays > 0 ? `Due in ${diffDays} days` : 'Due';
-                })()}
-              </span>
-            </div>
+            <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '10px', backgroundColor: 'rgba(255, 255, 255, 0.2)', textTransform: 'uppercase' }}>
+              {pregInfo.trimester}
+            </span>
           </div>
-          <div className="baby-card-right">
-            <span className="baby-card-phase-label" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Pregnancy</span>
-            <span className="baby-card-phase-val" style={{ color: '#FFFFFF' }}>Week {pregnancyWeek}</span>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#FFFFFF' }}>Week {pregInfo.gestationWeek} <span style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>of 40</span></h2>
+            <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#FFFFFF' }}>{pregInfo.remainingDays} Days Left</span>
+          </div>
+
+          <div style={{ height: '8px', background: 'rgba(255,255,255,0.25)', borderRadius: '10px', overflow: 'hidden', width: '100%' }}>
+            <div style={{ height: '100%', background: '#FFFFFF', width: `${(pregInfo.gestationWeek / 40) * 100}%`, borderRadius: '10px', transition: 'width 0.4s ease' }}></div>
           </div>
         </div>
       ) : (
@@ -2157,24 +2491,73 @@ function DashboardModule({
         </div>
       )}
 
-      {/* 2.5 Age-Specific Daily Guidance Banner */}
-      {motherPhase === 'baby' && (() => {
-        const ageInMonths = calculateAgeInMonths(currentBaby.dob);
-        let phaseTitle = "Newborn Phase";
-        let tipText = "Newborns sleep 16-18 hours a day. Focus on skin-to-skin contact, frequent feeding, and resting whenever the baby sleeps.";
+      {/* Fetal size visualizer card for pregnancy */}
+      {motherPhase === 'pregnancy' && pregInfo && (
+        <div className="premium-card" style={{ display: 'flex', gap: '14px', padding: '16px', marginTop: '12px', alignItems: 'center', background: '#FFFFFF' }}>
+          <div style={{ fontSize: '32px', padding: '10px', backgroundColor: 'var(--mother-secondary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {pregInfo.fruit.split(' ').slice(-1)[0]}
+          </div>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--mother-primary)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Fetal Size Comparison</span>
+            <h4 style={{ fontSize: '14.5px', fontWeight: '800', color: 'var(--color-text-primary)', marginTop: '2px' }}>Baby is as big as a {pregInfo.fruit}</h4>
+            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>{pregInfo.sizeDesc} {pregInfo.extraDesc}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 2.5 Dynamic Guidance Banners */}
+      {(() => {
+        let phaseTitle = "";
+        let tipText = "";
+        let icon = "💡";
+        let color = "var(--dev-primary)";
+        let bg = "var(--dev-secondary)";
+        let border = "rgba(245, 165, 36, 0.15)";
         
-        if (ageInMonths >= 6) {
-          phaseTitle = "Toddler Exploration";
-          tipText = "Introduce iron-rich soft solid foods (like pureed carrots, bananas) alongside regular feeding. Encourage crawling and motor checks.";
-        } else if (ageInMonths >= 3) {
-          phaseTitle = "Infant Discovery";
-          tipText = "Your baby is starting to track objects! Increase tummy time practice to 20 mins daily to support back muscle development.";
+        if (motherPhase === 'pregnancy' && pregInfo) {
+          phaseTitle = `Pregnancy Guidance • Trimester ${pregInfo.trimester.charAt(0)}`;
+          color = "var(--mother-primary)";
+          bg = "var(--mother-secondary)";
+          border = "rgba(244, 107, 138, 0.15)";
+          icon = "🤰";
+          
+          if (pregInfo.gestationWeek <= 13) {
+            tipText = "Trimester 1: Drink lots of fluids (2.5L daily), continue your prenatal vitamins, and secure sleep checkups. Rest when you feel exhausted.";
+          } else if (pregInfo.gestationWeek <= 27) {
+            tipText = "Trimester 2: The 'golden semester'! Start baby-proofing cupboards, get your 20-week anatomy ultrasound scan, and perform pelvic stretches.";
+          } else {
+            tipText = "Trimester 3: Keep paracetamol and hospital bag packed! Aim for daily kick monitoring. Perform GBS screens at week 36.";
+          }
+        } else {
+          const ageInMonths = calculateAgeInMonths(currentBaby.dob);
+          if (ageInMonths < 1) {
+            phaseTitle = "Newborn Care • Week 1-4";
+            tipText = "Sleep schedules are irregular (16-18 hrs). Prioritize breastfeeds/formula feeds, local diaper changes, and plenty of skin-to-skin touch.";
+            color = "var(--baby-primary)";
+            bg = "var(--baby-secondary)";
+            border = "rgba(83, 200, 139, 0.15)";
+            icon = "👶";
+          } else if (ageInMonths >= 6) {
+            phaseTitle = `Toddler Exploration • Month ${ageInMonths}`;
+            tipText = `${currentBaby.name} is ${ageString}! Introduce mashed purees (carrots, bananas) alongside breastmilk. Clean nurseries as they crawl.`;
+            color = "var(--cal-primary)";
+            bg = "var(--cal-secondary)";
+            border = "rgba(91, 143, 249, 0.15)";
+            icon = "🥑";
+          } else {
+            phaseTitle = `Infant Discovery • Month ${ageInMonths}`;
+            tipText = `${currentBaby.name} is ${ageString}! Tummy time is key (15-20 mins daily). Read high-contrast booklets to enhance tracking sensors.`;
+            color = "var(--baby-primary)";
+            bg = "var(--baby-secondary)";
+            border = "rgba(83, 200, 139, 0.15)";
+            icon = "✨";
+          }
         }
         
         return (
           <div style={{
-            background: 'var(--dev-secondary)',
-            border: '1px solid rgba(83, 109, 254, 0.15)',
+            background: bg,
+            border: `1px solid ${border}`,
             borderRadius: '16px',
             padding: '14px 16px',
             marginTop: '12px',
@@ -2183,19 +2566,111 @@ function DashboardModule({
             gap: '12px',
             textAlign: 'left'
           }}>
-            <span style={{ fontSize: '20px', flexShrink: 0 }}>💡</span>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>{icon}</span>
             <div>
-              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--dev-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Daily Guidance • {phaseTitle}</span>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{phaseTitle}</span>
               <p style={{ fontSize: '12.5px', color: 'var(--color-text-primary)', lineHeight: '1.45', margin: '4px 0 0 0' }}>{tipText}</p>
             </div>
           </div>
         );
       })()}
 
+      {/* 2.6 Pregnancy Fetal Kick Counter Widget */}
+      {motherPhase === 'pregnancy' && (
+        <div className="premium-card" style={{ padding: '20px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#FFFFFF', textAlign: 'left' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--mother-primary)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Active Counter</span>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--color-text-primary)', marginTop: '2px' }}>Fetal Kick Tracker 👣</h3>
+            </div>
+            <span style={{ fontSize: '11.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Session: {pregnancyKicks} kicks</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '100%' }}>
+            <button
+              onClick={handleLogKick}
+              className="btn-primary"
+              style={{
+                flex: 2,
+                padding: '12px',
+                fontSize: '14px',
+                borderRadius: '16px',
+                background: 'var(--mother-primary)',
+                boxShadow: '0 4px 12px rgba(244, 107, 138, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              👣 Tap to Log Kick
+            </button>
+            <button
+              onClick={handleSaveKickSession}
+              disabled={pregnancyKicks === 0}
+              className="btn-secondary"
+              style={{
+                flex: 1,
+                padding: '12px',
+                fontSize: '13px',
+                borderRadius: '16px',
+                opacity: pregnancyKicks === 0 ? 0.5 : 1,
+                cursor: pregnancyKicks === 0 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Save
+            </button>
+            <button
+              onClick={handleResetKicks}
+              disabled={pregnancyKicks === 0}
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '12px',
+                border: '1px solid var(--color-border)',
+                background: '#FFF',
+                color: 'var(--reminder-primary)',
+                cursor: pregnancyKicks === 0 ? 'not-allowed' : 'pointer',
+                opacity: pregnancyKicks === 0 ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '12px'
+              }}
+            >
+              ↺
+            </button>
+          </div>
+
+          {/* Tips block */}
+          <div style={{ background: 'rgba(0,0,0,0.015)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', lineHeight: '1.4', display: 'block' }}>
+              💡 <strong>Clinicians recommend:</strong> Try to count baby movements daily. A healthy baby usually kicks at least 10 times within 2 hours of active tracking.
+            </span>
+          </div>
+
+          {/* Session history logs list */}
+          {kickHistory.length > 0 && (
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--color-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Recent Sessions</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {kickHistory.slice(0, 3).map((session, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-app)', borderRadius: '10px', fontSize: '12px', border: '1px solid var(--color-border)' }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>{session.time}</span>
+                    <strong style={{ color: 'var(--mother-primary)' }}>{session.count} Kicks</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 3. Today's Progress Horizontal Bar */}
       <div className="progress-bar-section">
         <div className="progress-bar-header">
-          <span className="progress-bar-title">Today's Progress</span>
+          <span className="progress-bar-title">Today's Tasks Done</span>
           <span className="progress-bar-percent">{checklistPercent}%</span>
         </div>
         <div className="progress-bar-track">
@@ -2729,8 +3204,8 @@ function ArticlesModule({
 
 // 5.5 STANDALONE MILESTONES MODULE
 function MilestonesModule({
-  currentBaby,
-  authName,
+  currentBaby: _currentBaby,
+  authName: _authName,
   milestones,
   setMilestones
 }: {
@@ -2739,197 +3214,277 @@ function MilestonesModule({
   milestones: MilestoneItem[];
   setMilestones: (updatedList: MilestoneItem[]) => void;
 }) {
-  const [milestoneFilter, setMilestoneFilter] = useState<'all' | 'motor' | 'cognitive' | 'communication'>('all');
-  
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Group milestones by category
+  const categories = [
+    { key: 'motor', label: 'Motor Skills' },
+    { key: 'communication', label: 'Communication' },
+    { key: 'cognitive', label: 'Cognitive Skills' }
+  ] as const;
+
+  const totalCount = milestones.length;
+  const achievedCount = milestones.filter(m => m.status === 'achieved').length;
+  const progressPercent = totalCount > 0 ? Math.round((achievedCount / totalCount) * 100) : 0;
+
+  const handleCheckboxToggle = (m: MilestoneItem) => {
+    const newStatus: 'achieved' | 'in_progress' | 'upcoming' = m.status === 'achieved' ? 'upcoming' : 'achieved';
+    const updated = milestones.map(item => item.id === m.id ? { ...item, status: newStatus } : item);
+    setMilestones(updated);
+  };
+
+  const handleStatusChange = (m: MilestoneItem, status: 'achieved' | 'in_progress' | 'upcoming') => {
+    const updated = milestones.map(item => item.id === m.id ? { ...item, status } : item);
+    setMilestones(updated);
+  };
+
   return (
-    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '80px', '--theme-color': 'var(--baby-primary)' } as React.CSSProperties}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Milestones</h2>
+    <div className="screen-scroll-container animate-fade-in" style={{ paddingBottom: '80px', '--theme-color': 'var(--dev-primary)' } as React.CSSProperties}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
         
-        {/* Explanation card */}
+        {/* Title */}
+        <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', margin: 0 }}>Milestones</h2>
+        
+        {/* Overall Progress Card */}
         <div style={{
-          background: 'linear-gradient(135deg, var(--baby-secondary) 0%, rgba(255,255,255,0.4) 100%)',
-          border: '1px solid var(--baby-primary)',
-          borderRadius: '20px',
-          padding: '16px',
+          background: 'linear-gradient(135deg, rgba(245, 165, 36, 0.08) 0%, rgba(245, 165, 36, 0.02) 100%)',
+          border: '1px solid rgba(245, 165, 36, 0.15)',
+          borderRadius: '24px',
+          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px'
+          gap: '12px',
+          boxShadow: 'var(--shadow-sm)'
         }}>
-          <span style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--baby-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            💡 What is the Milestone Tracker?
+          <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Overall Progress
           </span>
-          <p style={{ fontSize: '12.5px', color: 'var(--color-text-primary)', lineHeight: '1.45', margin: 0 }}>
-            Milestones are developmental checkpoints (like sitting up, rolling over, and laughing) that track {currentBaby.name}'s motor, cognitive, and communication progress.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', paddingTop: '8px', borderTop: '1px solid rgba(83, 200, 139, 0.2)', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>
-            <span>Logged by Mother {authName}</span>
-            <span style={{ color: 'var(--color-success)' }}>
-              {milestones.filter(m => m.status === 'achieved').length} of {milestones.length} Completed ✓
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-text-primary)' }}>
+              {achievedCount}/{totalCount} <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--color-text-secondary)' }}>Achieved</span>
             </span>
+            <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-text-primary)' }}>
+              {progressPercent}%
+            </span>
+          </div>
+          
+          {/* Progress Bar */}
+          <div style={{
+            height: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            width: '100%'
+          }}>
+            <div style={{
+              height: '100%',
+              backgroundColor: 'var(--color-success)',
+              borderRadius: '10px',
+              width: `${progressPercent}%`,
+              transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+            }} />
           </div>
         </div>
 
-        {/* Category Pill Filters */}
-        <div style={{ display: 'flex', gap: '4px', background: 'var(--color-border)', padding: '4px', borderRadius: '14px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-          {([
-            { key: 'all', label: 'All' },
-            { key: 'motor', label: 'Motor' },
-            { key: 'cognitive', label: 'Cognitive' },
-            { key: 'communication', label: 'Communication' }
-          ] as const).map(tab => {
-            const active = milestoneFilter === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setMilestoneFilter(tab.key)}
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: active ? '#FFFFFF' : 'transparent',
-                  color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  fontWeight: '700',
-                  fontSize: '12.5px',
-                  cursor: 'pointer',
-                  boxShadow: active ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Grouped Lists */}
+        {categories.map(cat => {
+          const catMilestones = milestones.filter(m => m.category === cat.key);
+          if (catMilestones.length === 0) return null;
 
-        {/* List of Milestones */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
-          {(() => {
-            const filtered = milestones.filter(m => milestoneFilter === 'all' || m.category === milestoneFilter);
-            if (filtered.length === 0) {
-              return (
-                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--color-text-secondary)' }}>
-                  No milestones found in this category.
-                </div>
-              );
-            }
-            return filtered.map(m => {
-              let statusStripeColor = 'var(--color-border)';
-              let cardBorderColor = 'var(--color-border)';
-              let statusLabel = 'Upcoming';
-              let statusLabelColor = 'var(--color-text-secondary)';
-              let statusLabelBg = 'var(--bg-app)';
-              
-              if (m.status === 'achieved') {
-                statusStripeColor = 'var(--color-success)';
-                cardBorderColor = 'rgba(83, 200, 139, 0.3)';
-                statusLabel = 'Achieved';
-                statusLabelColor = 'var(--color-success)';
-                statusLabelBg = 'var(--color-success-bg)';
-              } else if (m.status === 'in_progress') {
-                statusStripeColor = '#F2994A';
-                cardBorderColor = 'rgba(242, 153, 74, 0.3)';
-                statusLabel = 'In Progress';
-                statusLabelColor = '#F2994A';
-                statusLabelBg = 'rgba(242, 153, 74, 0.1)';
-              }
-              
-              return (
-                <div
-                  key={m.id}
-                  style={{
-                    background: 'var(--bg-surface)',
-                    border: `1px solid ${cardBorderColor}`,
-                    borderRadius: '18px',
-                    padding: '16px 16px 16px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    boxShadow: 'var(--shadow-sm)'
-                  }}
-                >
-                  <div style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: '6px',
-                    backgroundColor: statusStripeColor
-                  }} />
+          return (
+            <div key={cat.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+              {/* Category Header */}
+              <h3 style={{
+                fontSize: '14px',
+                fontWeight: '800',
+                color: 'var(--color-text-primary)',
+                letterSpacing: '-0.01em',
+                paddingLeft: '4px',
+                marginBottom: '4px'
+              }}>
+                {cat.label}
+              </h3>
+
+              {/* Milestones Box */}
+              <div style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-sm)'
+              }}>
+                {catMilestones.map((m, idx) => {
+                  const isExpanded = expandedId === m.id;
+                  const isLast = idx === catMilestones.length - 1;
                   
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h4 style={{ fontSize: '15px', fontWeight: '750', color: 'var(--color-text-primary)' }}>{m.title}</h4>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '8px', textTransform: 'capitalize', background: m.category === 'motor' ? 'var(--cal-secondary)' : m.category === 'cognitive' ? 'var(--dev-secondary)' : 'var(--mother-secondary)', color: m.category === 'motor' ? 'var(--cal-primary)' : m.category === 'cognitive' ? 'var(--dev-primary)' : 'var(--mother-primary)', fontWeight: '700' }}>
-                        {m.category}
-                      </span>
-                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '8px', background: statusLabelBg, color: statusLabelColor, fontWeight: '700' }}>
-                        {statusLabel}
-                      </span>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '12.5px', color: 'var(--color-text-secondary)', lineHeight: '1.45', margin: 0 }}>{m.desc}</p>
+                  // Status badge styling
+                  let badgeText = 'Upcoming';
+                  let badgeColor = 'var(--color-text-secondary)';
+                  let badgeBg = 'var(--color-border)';
                   
-                  {/* Interactive Toggle Badges */}
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
-                    {(['achieved', 'in_progress', 'upcoming'] as const).map(status => {
-                      const isActive = m.status === status;
-                      let bg = 'var(--bg-app)';
-                      let color = 'var(--color-text-secondary)';
-                      let border = '1px solid var(--color-border)';
-                      
-                      if (isActive) {
-                        if (status === 'achieved') {
-                          bg = 'var(--color-success-bg)';
-                          color = 'var(--color-success)';
-                          border = '1px solid var(--color-success)';
-                        } else if (status === 'in_progress') {
-                          bg = 'rgba(242, 153, 74, 0.1)';
-                          color = '#F2994A';
-                          border = '1px solid #F2994A';
-                        } else {
-                          bg = 'var(--baby-secondary)';
-                          color = 'var(--baby-primary)';
-                          border = '1px solid var(--baby-primary)';
-                        }
-                      }
-                      return (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => {
-                            const updated = milestones.map(item => item.id === m.id ? { ...item, status } : item);
-                            setMilestones(updated);
+                  if (m.status === 'achieved') {
+                    badgeText = 'Achieved';
+                    badgeColor = 'var(--color-success)';
+                    badgeBg = 'var(--color-success-bg)';
+                  } else if (m.status === 'in_progress') {
+                    badgeText = 'In Progress';
+                    badgeColor = '#F2994A';
+                    badgeBg = 'rgba(242, 153, 74, 0.1)';
+                  } else {
+                    badgeColor = '#8A6BFF';
+                    badgeBg = 'rgba(138, 107, 255, 0.1)';
+                  }
+
+                  return (
+                    <div key={m.id} style={{ borderBottom: isLast ? 'none' : '1px solid var(--color-border)' }}>
+                      {/* Main Row */}
+                      <div 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '16px 20px',
+                          cursor: 'pointer',
+                          gap: '14px',
+                          transition: 'background-color 0.2s',
+                        }}
+                        onClick={() => setExpandedId(isExpanded ? null : m.id)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.01)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        {/* Checkbox (Left) */}
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Avoid expanding row when clicking checkbox
+                            handleCheckboxToggle(m);
                           }}
                           style={{
-                            flex: 1,
-                            padding: '8px 0',
-                            borderRadius: '10px',
-                            fontSize: '11px',
-                            fontWeight: '750',
-                            background: bg,
-                            color: color,
-                            border: border,
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             cursor: 'pointer',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.02em',
-                            transition: 'all 0.2s ease'
+                            border: m.status === 'achieved' ? '2px solid var(--color-success)' : '2px solid var(--color-text-tertiary)',
+                            backgroundColor: m.status === 'achieved' ? 'var(--color-success)' : 'transparent',
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
                           }}
                         >
-                          {status === 'in_progress' ? 'In Progress' : status}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            });
-          })()}
-        </div>
+                          {m.status === 'achieved' && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px' }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Title (Middle) */}
+                        <span style={{
+                          fontSize: '14.5px',
+                          fontWeight: '600',
+                          color: 'var(--color-text-primary)',
+                          flexGrow: 1,
+                          lineHeight: '1.3'
+                        }}>
+                          {m.title}
+                        </span>
+
+                        {/* Status Badge (Right) */}
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: '750',
+                          padding: '4px 10px',
+                          borderRadius: '10px',
+                          backgroundColor: badgeBg,
+                          color: badgeColor,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}>
+                          {badgeText}
+                        </span>
+                      </div>
+
+                      {/* Expandable Content (Accordion) */}
+                      <div style={{
+                        maxHeight: isExpanded ? '200px' : '0px',
+                        overflow: 'hidden',
+                        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.015)'
+                      }}>
+                        <div style={{ padding: '0 20px 20px 58px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {/* Description */}
+                          <p style={{
+                            fontSize: '12.5px',
+                            color: 'var(--color-text-secondary)',
+                            lineHeight: '1.45',
+                            margin: 0
+                          }}>
+                            {m.desc}
+                          </p>
+
+                          {/* Quick Status Buttons */}
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                            {(['achieved', 'in_progress', 'upcoming'] as const).map(status => {
+                              const isActive = m.status === status;
+                              let btnBg = 'var(--bg-surface)';
+                              let btnColor = 'var(--color-text-secondary)';
+                              let btnBorder = '1px solid var(--color-border)';
+                              
+                              if (isActive) {
+                                if (status === 'achieved') {
+                                  btnBg = 'var(--color-success-bg)';
+                                  btnColor = 'var(--color-success)';
+                                  btnBorder = '1px solid var(--color-success)';
+                                } else if (status === 'in_progress') {
+                                  btnBg = 'rgba(242, 153, 74, 0.1)';
+                                  btnColor = '#F2994A';
+                                  btnBorder = '1px solid #F2994A';
+                                } else {
+                                  btnBg = 'rgba(138, 107, 255, 0.1)';
+                                  btnColor = '#8A6BFF';
+                                  btnBorder = '1px solid #8A6BFF';
+                                }
+                              }
+                              
+                              return (
+                                <button
+                                  key={status}
+                                  type="button"
+                                  onClick={() => handleStatusChange(m, status)}
+                                  style={{
+                                    flex: 1,
+                                    padding: '8px 0',
+                                    borderRadius: '10px',
+                                    fontSize: '11px',
+                                    fontWeight: '750',
+                                    background: btnBg,
+                                    color: btnColor,
+                                    border: btnBorder,
+                                    cursor: 'pointer',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.02em',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                >
+                                  {status === 'in_progress' ? 'In Progress' : status}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
       </div>
     </div>
   );
