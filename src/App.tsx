@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Heart,
   User,
+  Home,
   Baby,
   Calendar,
   CheckSquare,
@@ -11,7 +12,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Search,
-  Settings,
   Camera,
   Check,
   MapPin,
@@ -174,7 +174,7 @@ export default function App() {
   
   // App Core States
   const [appFlow, setAppFlow] = useState<string>(() => localStorage.getItem('bamudi_flow') || 'splash');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => localStorage.getItem('bamudi_dark_mode') === 'true');
+  const [isDarkMode] = useState<boolean>(false);
   const [language, setLanguage] = useState<string>('English');
 
   // Authentication Fields
@@ -242,6 +242,13 @@ export default function App() {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showAddGrowthModal, setShowAddGrowthModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Vaccine Alert', message: 'DTaP-IPV-Hib Dose 1 is due in 9 days.', time: '2 hours ago', read: false },
+    { id: 2, title: 'Partner Update', message: 'Ahmad updated nap time log for Ayaan.', time: '5 hours ago', read: false },
+    { id: 3, title: 'Weekly Milestone', message: 'Ayaan reached 3 months milestone checklist.', time: 'Yesterday', read: true },
+    { id: 4, title: 'New Guide Published', message: 'Read: Scandinavian Sleep routines for newborns.', time: '2 days ago', read: true }
+  ]);
   
   // Input fields for modals
   const [newTaskName, setNewTaskName] = useState('');
@@ -1161,6 +1168,8 @@ export default function App() {
                       setActiveChildIndex={setActiveChildIndex}
                       motherPhase={motherPhase}
                       pregnancyWeek={pregnancyWeek}
+                      setShowNotifications={setShowNotifications}
+                      notificationsCount={notifications.filter(n => !n.read).length}
                     />
                   )}
 
@@ -1198,11 +1207,18 @@ export default function App() {
                   {activeTab === 'profile' && (
                     <MoreModule
                       authName={authName}
+                      setAuthName={setAuthName}
+                      authEmail={authEmail}
+                      authPassword={authPassword}
+                      setAuthPassword={setAuthPassword}
+                      motherPhase={motherPhase}
+                      setMotherPhase={setMotherPhase}
+                      children={children}
+                      setChildren={setChildren}
+                      activeChildIndex={activeChildIndex}
+                      setActiveChildIndex={setActiveChildIndex}
                       currentBaby={currentBaby}
-                      ageString={calculateBabyAge(currentBaby.dob)}
                       setShowAddGrowthModal={setShowAddGrowthModal}
-                      isDarkMode={isDarkMode}
-                      setIsDarkMode={setIsDarkMode}
                       language={language}
                       setLanguage={setLanguage}
                       handleLogout={handleLogout}
@@ -1227,7 +1243,7 @@ export default function App() {
                     } as React.CSSProperties}
                   >
                     <button className={`nav-tab-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-                      <User size={20} />
+                      <Home size={20} />
                       <span className="nav-tab-label">Home</span>
                     </button>
                     <button className={`nav-tab-item ${activeTab === 'checklist' ? 'active' : ''}`} onClick={() => setActiveTab('checklist')}>
@@ -1489,6 +1505,67 @@ export default function App() {
         </div>
       )}
 
+      {/* NOTIFICATIONS BOTTOM SHEET */}
+      {showNotifications && (
+        <div className="bottom-sheet-overlay animate-fade-in" onClick={() => setShowNotifications(false)}>
+          <div className="bottom-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="bottom-sheet-handle"></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Notifications</h3>
+              {notifications.some(n => !n.read) && (
+                <button
+                  onClick={() => {
+                    setNotifications(notifications.map(n => ({ ...n, read: true })));
+                    alert('All marked as read!');
+                  }}
+                  style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto' }}>
+              {notifications.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--color-text-secondary)' }}>
+                  <Bell size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
+                  <p style={{ fontSize: '13.5px', fontWeight: '600' }}>No new notifications</p>
+                </div>
+              ) : (
+                notifications.map(notif => (
+                  <div
+                    key={notif.id}
+                    onClick={() => {
+                      setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                    }}
+                    style={{
+                      padding: '12px 14px',
+                      background: notif.read ? 'var(--bg-surface)' : 'rgba(244, 107, 138, 0.05)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '16px',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {!notif.read && (
+                      <div style={{ position: 'absolute', top: '14px', right: '14px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--mother-primary)' }}></div>
+                    )}
+                    <span style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{notif.title}</span>
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4', paddingRight: '12px' }}>{notif.message}</p>
+                    <span style={{ display: 'block', fontSize: '9.5px', color: 'var(--color-text-secondary)', marginTop: '6px' }}>{notif.time}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <button className="btn-secondary" style={{ marginTop: '16px' }} onClick={() => setShowNotifications(false)}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -1593,7 +1670,9 @@ function DashboardModule({
   activeChildIndex,
   setActiveChildIndex,
   motherPhase,
-  pregnancyWeek
+  pregnancyWeek,
+  setShowNotifications,
+  notificationsCount
 }: {
   authName: string;
   currentBaby: any;
@@ -1611,6 +1690,8 @@ function DashboardModule({
   setActiveChildIndex: (idx: number) => void;
   motherPhase: 'pregnancy' | 'baby';
   pregnancyWeek: number;
+  setShowNotifications: (val: boolean) => void;
+  notificationsCount: number;
 }) {
   // Dynamic metrics calculations
   const pendingTasksCount = checklist.filter(t => t.category === 'daily' && !t.completed).length;
@@ -1654,9 +1735,9 @@ function DashboardModule({
             <h2>{authName} 💖</h2>
           </div>
         </div>
-        <button className="header-notification">
+        <button className="header-notification" onClick={() => setShowNotifications(true)}>
           <Bell size={20} />
-          <div className="notification-badge"></div>
+          {notificationsCount > 0 && <div className="notification-badge">{notificationsCount}</div>}
         </button>
       </div>
 
@@ -2187,28 +2268,71 @@ function ArticlesModule({
 // 6. MORE & PROFILE SUB-NAVIGATION MODULE
 function MoreModule({
   authName,
+  setAuthName,
+  authEmail,
+  authPassword,
+  setAuthPassword,
+  motherPhase,
+  setMotherPhase,
+  children,
+  setChildren,
+  activeChildIndex,
+  setActiveChildIndex,
   currentBaby,
-  ageString,
   setShowAddGrowthModal,
-  isDarkMode,
-  setIsDarkMode,
   language,
   setLanguage,
   handleLogout,
   calendarEvents
 }: {
   authName: string;
+  setAuthName: (val: string) => void;
+  authEmail: string;
+  authPassword: string;
+  setAuthPassword: (val: string) => void;
+  motherPhase: 'pregnancy' | 'baby';
+  setMotherPhase: (val: 'pregnancy' | 'baby') => void;
+  children: ChildProfile[];
+  setChildren: (val: ChildProfile[]) => void;
+  activeChildIndex: number;
+  setActiveChildIndex: (val: number) => void;
   currentBaby: any;
-  ageString: string;
   setShowAddGrowthModal: (val: boolean) => void;
-  isDarkMode: boolean;
-  setIsDarkMode: (val: boolean) => void;
   language: string;
   setLanguage: (val: string) => void;
   handleLogout: () => void;
   calendarEvents: CalendarEvent[];
 }) {
-  const [activeSubView, setActiveSubView] = useState<'menu' | 'profile_info' | 'growth_tracker' | 'reminders' | 'settings' | 'invite_partner' | 'medical_info' | 'memories' | 'nursery_notes' | 'privacy_policy' | 'terms_conditions' | 'help_center'>('menu');
+  const [activeSubView, setActiveSubView] = useState<'menu' | 'mother_profile_info' | 'baby_profile_info' | 'growth_tracker' | 'reminders' | 'invite_partner' | 'medical_info' | 'memories' | 'nursery_notes' | 'privacy_policy' | 'terms_conditions' | 'help_center'>('menu');
+  
+  // Local Mother State
+  const [tempMotherName, setTempMotherName] = useState(authName);
+  const [tempMotherPhase, setTempMotherPhase] = useState<'pregnancy' | 'baby'>(motherPhase);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Local Baby State
+  const [tempBabyName, setTempBabyName] = useState(currentBaby.name);
+  const [tempBabyDob, setTempBabyDob] = useState(currentBaby.dob);
+  const [tempBabyGender, setTempBabyGender] = useState(currentBaby.gender);
+
+  // Local Add Baby Form State
+  const [showAddChildForm, setShowAddChildForm] = useState(false);
+  const [newChildName, setNewChildName] = useState('');
+  const [newChildDob, setNewChildDob] = useState('');
+  const [newChildGender, setNewChildGender] = useState<'Boy' | 'Girl'>('Girl');
+
+  // Keep baby info sync'd when active baby changes
+  const activeBaby = children[activeChildIndex];
+  useEffect(() => {
+    if (activeBaby) {
+      setTempBabyName(activeBaby.name);
+      setTempBabyDob(activeBaby.dob);
+      setTempBabyGender(activeBaby.gender);
+    }
+  }, [activeChildIndex, children]);
+
   const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head' | 'bmi'>('weight');
   const [reminderFilterTab, setReminderFilterTab] = useState<'today' | 'tomorrow' | 'week'>('today');
   const [partnerEmail, setPartnerEmail] = useState('');
@@ -2248,7 +2372,7 @@ function MoreModule({
         <button
           onClick={() => {
             if (activeSubView === 'medical_info' || activeSubView === 'memories' || activeSubView === 'nursery_notes') {
-              setActiveSubView('profile_info');
+              setActiveSubView('baby_profile_info');
             } else {
               setActiveSubView('menu');
             }
@@ -2277,26 +2401,31 @@ function MoreModule({
             </div>
             <div style={{ flex: 1 }}>
               <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text-primary)' }}>{currentBaby.name}'s Profile</h3>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '12.5px', marginTop: '2px', fontWeight: '500' }}>Age: {ageString}</p>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '12.5px', marginTop: '2px', fontWeight: '500' }}>Mother: {authName}</p>
             </div>
-            <button
-              onClick={() => setActiveSubView('profile_info')}
-              style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', padding: '6px 12px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
-            >
-              Edit
-            </button>
           </div>
 
           {/* Section: Profile & Baby Info */}
-          <span className="profile-section-title">Profile & Baby Tracker</span>
+          <span className="profile-section-title">Nursery & Profiles</span>
           <div className="profile-list-group">
-            <div className="profile-list-row" onClick={() => setActiveSubView('profile_info')} style={{ '--theme-color': 'var(--baby-primary)', '--theme-bg': 'var(--baby-secondary)' } as React.CSSProperties}>
+            <div className="profile-list-row" onClick={() => setActiveSubView('mother_profile_info')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
               <div className="profile-row-icon-wrapper">
                 <User size={18} />
               </div>
               <div className="profile-row-title-container">
-                <span className="profile-row-title">Profile Details</span>
-                <span className="profile-row-desc">Baby DOB, gender, and mother's metadata</span>
+                <span className="profile-row-title">Mother's Profile</span>
+                <span className="profile-row-desc">Edit name, avatar, and active care phase</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setActiveSubView('baby_profile_info')} style={{ '--theme-color': 'var(--baby-primary)', '--theme-bg': 'var(--baby-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <Baby size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Baby's Profile</span>
+                <span className="profile-row-desc">Birth records, medical logs, nursery notes</span>
               </div>
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
@@ -2343,18 +2472,6 @@ function MoreModule({
           {/* Section: Preferences */}
           <span className="profile-section-title">Preferences</span>
           <div className="profile-list-group">
-            <div className="profile-list-row" onClick={() => setActiveSubView('settings')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
-              <div className="profile-row-icon-wrapper">
-                <Settings size={18} />
-              </div>
-              <div className="profile-row-title-container">
-                <span className="profile-row-title">App Theme</span>
-                <span className="profile-row-desc">Configure dark mode and appearance</span>
-              </div>
-              <span className="profile-row-value">{isDarkMode ? 'Dark' : 'Light'}</span>
-              <ChevronRight size={16} color="var(--color-text-secondary)" />
-            </div>
-
             <div className="profile-list-row" onClick={() => setLanguage(language === 'English' ? 'Danish' : 'English')} style={{ '--theme-color': 'var(--mother-primary)', '--theme-bg': 'var(--mother-secondary)' } as React.CSSProperties}>
               <div className="profile-row-icon-wrapper">
                 <Smartphone size={18} />
@@ -2421,26 +2538,400 @@ function MoreModule({
         </div>
       )}
 
-      {/* VIEW 2: PROFILE INFO */}
-      {activeSubView === 'profile_info' && (
+      {/* VIEW 2a: MOTHER'S PROFILE INFO */}
+      {activeSubView === 'mother_profile_info' && (
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Profile Information</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)' }}>
-              <span style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Baby Name</span>
-              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{currentBaby.name}</span>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Mother's Profile</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '14px' }}>
+            <div className="input-group">
+              <span className="input-label">Mother's Name</span>
+              <input
+                type="text"
+                className="input-field"
+                value={tempMotherName}
+                onChange={(e) => setTempMotherName(e.target.value)}
+                placeholder="Sarah"
+              />
             </div>
-            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)' }}>
-              <span style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Gender</span>
-              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{currentBaby.gender}</span>
+
+            <div className="input-group">
+              <span className="input-label">Account Email</span>
+              <input
+                type="text"
+                className="input-field"
+                value={authEmail}
+                disabled
+                style={{ opacity: 0.6, cursor: 'not-allowed' }}
+              />
             </div>
-            <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>Date of Birth</span>
-              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{currentBaby.dob}</span>
+
+            <div className="input-group">
+              <span className="input-label">Active Care Phase</span>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setTempMotherPhase('pregnancy')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    background: tempMotherPhase === 'pregnancy' ? 'var(--mother-secondary)' : 'var(--bg-surface)',
+                    color: tempMotherPhase === 'pregnancy' ? 'var(--mother-primary)' : 'var(--color-text-secondary)',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Pregnancy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTempMotherPhase('baby')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    background: tempMotherPhase === 'baby' ? 'var(--baby-secondary)' : 'var(--bg-surface)',
+                    color: tempMotherPhase === 'baby' ? 'var(--baby-primary)' : 'var(--color-text-secondary)',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Baby Phase
+                </button>
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden', marginTop: '10px' }}>
+          {/* Change Password Block */}
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '10px', paddingLeft: '4px' }}>Security Settings</span>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '14px' }}>
+            <div className="input-group">
+              <span className="input-label">Current Password</span>
+              <input
+                type="password"
+                className="input-field"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+            </div>
+            
+            <div className="input-group">
+              <span className="input-label">New Password</span>
+              <input
+                type="password"
+                className="input-field"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+
+            <div className="input-group">
+              <span className="input-label">Confirm New Password</span>
+              <input
+                type="password"
+                className="input-field"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                  alert('Please fill out all password fields!');
+                  return;
+                }
+                if (oldPassword !== authPassword) {
+                  alert('Current password does not match!');
+                  return;
+                }
+                if (newPassword !== confirmPassword) {
+                  alert('New passwords do not match!');
+                  return;
+                }
+                setAuthPassword(newPassword);
+                setOldPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                alert('Password changed successfully!');
+              }}
+              className="btn-secondary"
+              style={{ padding: '10.5px', borderRadius: '12px', background: 'rgba(0,0,0,0.02)', fontWeight: '700', fontSize: '13px' }}
+            >
+              Update Password
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              if (!tempMotherName.trim()) {
+                alert('Please enter a valid name!');
+                return;
+              }
+              setAuthName(tempMotherName);
+              setMotherPhase(tempMotherPhase);
+              alert('Mother profile changes saved successfully!');
+              setActiveSubView('menu');
+            }}
+            className="btn-primary"
+            style={{ background: 'var(--mother-primary)', borderRadius: '16px', marginTop: '10px' }}
+          >
+            Save Changes
+          </button>
+        </div>
+      )}
+
+      {/* VIEW 2b: BABY'S PROFILE INFO */}
+      {activeSubView === 'baby_profile_info' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Baby Profiles</h2>
+
+          {/* Children List Manager */}
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '4px' }}>Select / Manage Active Baby</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
+            {children.map((child, idx) => (
+              <div
+                key={idx}
+                onClick={() => setActiveChildIndex(idx)}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '12px 14px',
+                  background: activeChildIndex === idx ? 'var(--baby-secondary)' : 'var(--bg-surface)',
+                  border: activeChildIndex === idx ? '2px solid var(--baby-primary)' : '1px solid var(--color-border)',
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>{child.gender === 'Girl' ? '👧' : '👦'}</span>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>
+                      {child.name} {activeChildIndex === idx && <strong style={{ fontSize: '10.5px', color: 'var(--baby-primary)', marginLeft: '4px' }}>(Active)</strong>}
+                    </span>
+                    <span style={{ display: 'block', fontSize: '10.5px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>DOB: {child.dob}</span>
+                  </div>
+                </div>
+                
+                {children.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Are you sure you want to delete ${child.name}?`)) {
+                        const updated = children.filter((_, i) => i !== idx);
+                        setChildren(updated);
+                        localStorage.setItem('bamudi_children', JSON.stringify(updated));
+                        if (activeChildIndex >= updated.length) {
+                          setActiveChildIndex(0);
+                        }
+                        alert(`${child.name} deleted successfully!`);
+                      }
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--reminder-primary)', cursor: 'pointer', fontSize: '12.5px', fontWeight: '700', padding: '4px' }}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add Baby Box / Button */}
+          {showAddChildForm ? (
+            <div style={{ background: 'rgba(0,0,0,0.02)', padding: '16px', borderRadius: '18px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Add New Child</span>
+              
+              <div className="input-group">
+                <span className="input-label">Child's Name</span>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={newChildName}
+                  onChange={(e) => setNewChildName(e.target.value)}
+                  placeholder="E.g. Sophia"
+                />
+              </div>
+
+              <div className="input-group">
+                <span className="input-label">Date of Birth / Expected Due Date</span>
+                <input
+                  type="date"
+                  className="input-field"
+                  value={newChildDob}
+                  onChange={(e) => setNewChildDob(e.target.value)}
+                />
+              </div>
+
+              <div className="input-group">
+                <span className="input-label">Gender</span>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setNewChildGender('Girl')}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--color-border)',
+                      background: newChildGender === 'Girl' ? 'var(--mother-secondary)' : 'var(--bg-surface)',
+                      color: newChildGender === 'Girl' ? 'var(--mother-primary)' : 'var(--color-text-secondary)',
+                      fontWeight: '700',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Girl 👧
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewChildGender('Boy')}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--color-border)',
+                      background: newChildGender === 'Boy' ? 'var(--cal-secondary)' : 'var(--bg-surface)',
+                      color: newChildGender === 'Boy' ? 'var(--cal-primary)' : 'var(--color-text-secondary)',
+                      fontWeight: '700',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Boy 👦
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!newChildName.trim() || !newChildDob) {
+                      alert('Please fill out all fields!');
+                      return;
+                    }
+                    const newBaby = {
+                      name: newChildName,
+                      dob: newChildDob,
+                      gender: newChildGender,
+                      weight: 3.2,
+                      height: 50
+                    };
+                    const updated = [...children, newBaby];
+                    setChildren(updated);
+                    localStorage.setItem('bamudi_children', JSON.stringify(updated));
+                    setActiveChildIndex(updated.length - 1);
+                    setNewChildName('');
+                    setNewChildDob('');
+                    setShowAddChildForm(false);
+                    alert(`${newChildName} added successfully!`);
+                  }}
+                  className="btn-primary"
+                  style={{ padding: '10px', fontSize: '13px', borderRadius: '12px', background: 'var(--baby-primary)', flex: 1 }}
+                >
+                  Add Baby
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddChildForm(false)}
+                  className="btn-secondary"
+                  style={{ padding: '10px', fontSize: '13px', borderRadius: '12px', flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAddChildForm(true)}
+              className="btn-secondary"
+              style={{ borderStyle: 'dashed', borderRadius: '16px', display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center', padding: '12px' }}
+            >
+              <Plus size={16} /> Add Another Child
+            </button>
+          )}
+
+          {/* Edit current child info */}
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '8px', paddingLeft: '4px' }}>Edit Selected Baby Info</span>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '14px' }}>
+            <div className="input-group">
+              <span className="input-label">Baby's Name</span>
+              <input
+                type="text"
+                className="input-field"
+                value={tempBabyName}
+                onChange={(e) => setTempBabyName(e.target.value)}
+                placeholder="Aria"
+              />
+            </div>
+
+            <div className="input-group">
+              <span className="input-label">Date of Birth</span>
+              <input
+                type="date"
+                className="input-field"
+                value={tempBabyDob}
+                onChange={(e) => setTempBabyDob(e.target.value)}
+              />
+            </div>
+
+            <div className="input-group">
+              <span className="input-label">Gender</span>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setTempBabyGender('Girl')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    background: tempBabyGender === 'Girl' ? 'var(--mother-secondary)' : 'var(--bg-surface)',
+                    color: tempBabyGender === 'Girl' ? 'var(--mother-primary)' : 'var(--color-text-secondary)',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Girl 👧
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTempBabyGender('Boy')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    background: tempBabyGender === 'Boy' ? 'var(--cal-secondary)' : 'var(--bg-surface)',
+                    color: tempBabyGender === 'Boy' ? 'var(--cal-primary)' : 'var(--color-text-secondary)',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Boy 👦
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Child profile sub-logs */}
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '8px', paddingLeft: '4px' }}>Baby Log Sheets</span>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
             <div
               onClick={() => setActiveSubView('medical_info')}
               style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
@@ -2463,6 +2954,29 @@ function MoreModule({
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
           </div>
+
+          <button
+            onClick={() => {
+              if (!tempBabyName.trim() || !tempBabyDob) {
+                alert('Please fill out all fields!');
+                return;
+              }
+              const updated = children.map((c, i) => i === activeChildIndex ? {
+                ...c,
+                name: tempBabyName,
+                dob: tempBabyDob,
+                gender: tempBabyGender
+              } : c);
+              setChildren(updated);
+              localStorage.setItem('bamudi_children', JSON.stringify(updated));
+              alert("Baby profile changes saved successfully!");
+              setActiveSubView('menu');
+            }}
+            className="btn-primary"
+            style={{ background: 'var(--baby-primary)', borderRadius: '16px', marginTop: '10px' }}
+          >
+            Save Changes
+          </button>
         </div>
       )}
 
@@ -2613,53 +3127,7 @@ function MoreModule({
         </div>
       )}
 
-      {/* VIEW 5: SETTINGS */}
-      {activeSubView === 'settings' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>App Settings</h2>
-          
-          <div className="switch-container">
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>Dark Mode Theme</span>
-            <label className="switch">
-              <input type="checkbox" checked={isDarkMode} onChange={(e) => setIsDarkMode(e.target.checked)} />
-              <span className="slider"></span>
-            </label>
-          </div>
 
-          <div style={{ padding: '8px 4px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-            Mother Account: <strong style={{ color: 'var(--color-text-primary)' }}>{authName}</strong>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-            <div
-              onClick={() => setLanguage(language === 'English' ? 'Danish' : 'English')}
-              style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
-            >
-              <span style={{ fontSize: '13.5px', fontWeight: '600' }}>Language</span>
-              <span style={{ fontSize: '12.5px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>{language}</span>
-            </div>
-            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}>
-              <span style={{ fontSize: '13.5px', fontWeight: '600' }}>App Notifications</span>
-              <span style={{ fontSize: '12.5px', color: 'var(--color-success)', fontWeight: '700' }}>Enabled</span>
-            </div>
-            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ fontSize: '13.5px', fontWeight: '600' }}>Privacy & Terms</span>
-              <ChevronRight size={16} color="var(--color-text-secondary)" />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}>
-              <span style={{ fontSize: '13.5px', fontWeight: '600' }}>Help Center & FAQ</span>
-              <HelpCircle size={16} color="var(--color-text-secondary)" />
-            </div>
-            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ fontSize: '13.5px', fontWeight: '600' }}>Support Hotline</span>
-              <ChevronRight size={16} color="var(--color-text-secondary)" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* VIEW 6: INVITE PARTNER */}
       {activeSubView === 'invite_partner' && (
@@ -2853,23 +3321,30 @@ function MoreModule({
           
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '16px', maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Data Privacy Principles</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Data Privacy & AES-256 Encryption</h4>
               <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                At Bamudi Compass, we treat child data with high-grade security. All uploaded growth data, vaccine history logs, and co-parent details are encrypted both in transit and at rest.
+                At Bamudi Compass, your family's data protection is our highest priority. All logged child activities (naps, breastfeeding, diapers), medical details, and pediatrician names are secured using industrial-grade AES-256 local encryption on device storage. Data transmitted to authorized co-parents utilizes SSL/TLS secure pipelines.
               </p>
             </div>
 
             <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. Information Sharing & Co-Parents</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. COPPA & Children's Data Protection</h4>
               <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                Your child's profile metrics are only shared with the co-parent account you explicitly authorize via email invitation. We never sell, lease, or distribute data to third-party advertisers.
+                We strictly adhere to the Children's Online Privacy Protection Act (COPPA). Because the app logs data of children under 13, all information is keyed only under the parent/guardian's credentials. We never collect or request location info, nor do we sell nursery tracking statistics to brokers or advertising networks.
               </p>
             </div>
 
             <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. GDPR and COPPA Compliance</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. Camera & Local Gallery Access</h4>
               <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                We comply fully with Children's Online Privacy Protection Act (COPPA) standards and general EU-GDPR standards. You have complete rights to request data deletion at any point.
+                The Photo Log features require camera and storage library access. These pictures are cached locally on your device and are only stored on our private, secure cloud storage buckets for synchronization if you explicitly activate co-parent checklist features.
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>4. GDPR Rights & Record Erasure</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                If you reside in the EU, you have complete rights under the General Data Protection Regulation (GDPR), including data access, correction, portability, and deletion. Deleting a child's profile inside the app immediately wipes all linked growth history, medical timelines, and co-parent logs from all sync systems.
               </p>
             </div>
           </div>
@@ -2883,23 +3358,23 @@ function MoreModule({
           
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '16px', maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Acceptance of Terms</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Disclaimer of Medical Guidance</h4>
               <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                By creating a nursery profile and inviting partners, you agree to these legal conditions. You are responsible for ensuring invited emails are correct.
+                Bamudi Compass is a parenting tracking application. All tools—including baby growth tracking percentiles, milestone guides, and immunization scheduler tables—are for general monitoring purposes only. The app does not provide medical diagnostic conclusions and should never replace qualified clinical checkups, pediatrician advice, or emergency services.
               </p>
             </div>
 
             <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. Nursery Services Disclaimer</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. Co-Parent Shared Responsibilities</h4>
               <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                Bamudi Compass is a digital tracking assistant. All information regarding growth percentiles and vaccination dates are for general tracking purposes and do not replace professional pediatric diagnosis.
+                When you initiate a co-parent or partner email invitation, you grant them complete editing and deletion privileges to the active child's logs, weight metrics, and system reminder settings. You are responsible for ensuring the invited co-parent credentials are correct and secure.
               </p>
             </div>
 
             <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. Account Security</h4>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. Fair & Proper Use</h4>
               <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                Please safeguard your credentials. If you detect unauthorized login or shared profile synchronization anomalies, contact support immediately.
+                You agree to use the application solely for tracking your child's nursery routines. Uploading inappropriate media to the Nursery Photo Log or executing automated queries to scraping APIs is strictly prohibited and will trigger immediate account suspension.
               </p>
             </div>
           </div>
@@ -2913,18 +3388,18 @@ function MoreModule({
 
           {/* Hotline card */}
           <div style={{ background: 'var(--article-secondary)', color: 'var(--article-primary)', padding: '16px', borderRadius: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '14.5px', fontWeight: '700' }}>Need Pediatric or Tech Support?</span>
-            <span style={{ fontSize: '12px', opacity: 0.9 }}>Support Hotline available 24/7 for urgent app navigation issues.</span>
-            <strong style={{ fontSize: '15px', marginTop: '8px', display: 'block' }}>Call: 1-800-BAMUDI (226834)</strong>
+            <span style={{ fontSize: '14.5px', fontWeight: '700' }}>Need Tech or Nursery Support?</span>
+            <span style={{ fontSize: '12px', opacity: 0.9 }}>Support representatives are available 24/7 for account setup or data restore issues.</span>
+            <strong style={{ fontSize: '15px', marginTop: '8px', display: 'block' }}>Call Support: 1-800-BAMUDI (226834)</strong>
           </div>
 
           {/* Accordion FAQs */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              { q: 'How do I invite a co-parent?', a: 'Go to Invite Partner in your Profile settings and enter their email address. They will receive a secure sync link.' },
-              { q: 'Can I track logs offline?', a: 'Yes, all diaper, nap, and bottle records are saved locally and synced once internet is restored.' },
-              { q: 'How is growth percentile calculated?', a: 'Percentiles are calculated against standard WHO child growth datasets for baby gender & age.' },
-              { q: 'How do I delete data records?', a: 'Under Profile Info, select details and delete child records. This immediately clears all co-parent logs too.' }
+              { q: 'How does real-time co-parent sync work?', a: 'Go to "Invite Partner (Father)", input their email, and tap "Send". Once they install the app and verify the email, their phone logs sync with yours automatically.' },
+              { q: 'How are growth percentiles determined?', a: 'The app compares baby weight, height, and head circumference entries against standardized Child Growth Reference datasets released by the World Health Organization (WHO) based on age in months and biological gender.' },
+              { q: 'Does the tracker support offline logging?', a: 'Absolutely. Feedings, nap intervals, diaper checks, and notes are logged locally. Once the device reconnects to network coverage, the database syncs changes to the cloud private container.' },
+              { q: 'Can I export logs for pediatrician visits?', a: 'Yes! Inside each log (Growth, Medical, Notes), you can view chronological history. A PDF/CSV export report tool is available directly inside the respective logs to share with clinics.' }
             ].map((faq, idx) => (
               <details key={idx} style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '12px 14px', cursor: 'pointer' }}>
                 <summary style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)', outline: 'none' }}>
