@@ -2208,7 +2208,7 @@ function MoreModule({
   handleLogout: () => void;
   calendarEvents: CalendarEvent[];
 }) {
-  const [activeSubView, setActiveSubView] = useState<'menu' | 'profile_info' | 'growth_tracker' | 'reminders' | 'settings' | 'invite_partner'>('menu');
+  const [activeSubView, setActiveSubView] = useState<'menu' | 'profile_info' | 'growth_tracker' | 'reminders' | 'settings' | 'invite_partner' | 'medical_info' | 'memories' | 'nursery_notes' | 'privacy_policy' | 'terms_conditions' | 'help_center'>('menu');
   const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head' | 'bmi'>('weight');
   const [reminderFilterTab, setReminderFilterTab] = useState<'today' | 'tomorrow' | 'week'>('today');
   const [partnerEmail, setPartnerEmail] = useState('');
@@ -2246,10 +2246,16 @@ function MoreModule({
       {/* Back button for sub-views */}
       {activeSubView !== 'menu' && (
         <button
-          onClick={() => setActiveSubView('menu')}
+          onClick={() => {
+            if (activeSubView === 'medical_info' || activeSubView === 'memories' || activeSubView === 'nursery_notes') {
+              setActiveSubView('profile_info');
+            } else {
+              setActiveSubView('menu');
+            }
+          }}
           style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: '600', marginBottom: '14px', paddingLeft: '0' }}
         >
-          <ChevronLeft size={16} /> Back to More
+          <ChevronLeft size={16} /> {activeSubView === 'medical_info' || activeSubView === 'memories' || activeSubView === 'nursery_notes' ? 'Back to Details' : 'Back to Profile'}
         </button>
       )}
 
@@ -2362,10 +2368,21 @@ function MoreModule({
             </div>
           </div>
 
-          {/* Section: Security & Nursery Legal */}
-          <span className="profile-section-title">Safety & Security</span>
+          {/* Section: Support & Nursery Legal */}
+          <span className="profile-section-title">Support & Safety</span>
           <div className="profile-list-group">
-            <div className="profile-list-row" onClick={() => alert('Simulated Nursery Privacy Policy loaded!')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
+            <div className="profile-list-row" onClick={() => setActiveSubView('help_center')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
+              <div className="profile-row-icon-wrapper">
+                <HelpCircle size={18} />
+              </div>
+              <div className="profile-row-title-container">
+                <span className="profile-row-title">Help Center & FAQs</span>
+                <span className="profile-row-desc">Common questions and user support hotline</span>
+              </div>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+
+            <div className="profile-list-row" onClick={() => setActiveSubView('privacy_policy')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
               <div className="profile-row-icon-wrapper">
                 <Bookmark size={18} />
               </div>
@@ -2376,7 +2393,7 @@ function MoreModule({
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
 
-            <div className="profile-list-row" onClick={() => alert('Simulated Nursery Terms of Service loaded!')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
+            <div className="profile-list-row" onClick={() => setActiveSubView('terms_conditions')} style={{ '--theme-color': 'var(--article-primary)', '--theme-bg': 'var(--article-secondary)' } as React.CSSProperties}>
               <div className="profile-row-icon-wrapper">
                 <BookOpen size={18} />
               </div>
@@ -2424,16 +2441,27 @@ function MoreModule({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden', marginTop: '10px' }}>
-            {['Medical Information', 'Photos & Memories', 'Nursery Notes'].map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => alert(`${item} log simulated!`)}
-                style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: idx < 2 ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }}
-              >
-                <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>{item}</span>
-                <ChevronRight size={16} color="var(--color-text-secondary)" />
-              </div>
-            ))}
+            <div
+              onClick={() => setActiveSubView('medical_info')}
+              style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>Medical Information</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+            <div
+              onClick={() => setActiveSubView('memories')}
+              style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>Photos & Memories</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
+            <div
+              onClick={() => setActiveSubView('nursery_notes')}
+              style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-primary)' }}>Nursery Notes</span>
+              <ChevronRight size={16} color="var(--color-text-secondary)" />
+            </div>
           </div>
         </div>
       )}
@@ -2685,6 +2713,229 @@ function MoreModule({
           >
             Send Invitation
           </button>
+        </div>
+      )}
+
+      {/* VIEW 7: MEDICAL INFO */}
+      {activeSubView === 'medical_info' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Medical Information</h2>
+          
+          {/* Pediatrician Card */}
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>Pediatrician Contact</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '14.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Dr. Emily Watson, MD</span>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>St. Mary's Children Clinic</span>
+              </div>
+              <a href="tel:+15550199" style={{ padding: '8px 12px', background: 'var(--baby-secondary)', color: 'var(--baby-primary)', borderRadius: '12px', fontSize: '12px', fontWeight: '700', textDecoration: 'none' }}>Call Clinic</a>
+            </div>
+          </div>
+
+          {/* Vaccination Schedule */}
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.02)', borderBottom: '1px solid var(--color-border)' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>Vaccination Status</span>
+            </div>
+            {[
+              { name: 'BCG (Tuberculosis)', date: 'Given: 2026-02-12', status: 'administered' },
+              { name: 'HepB Dose 1 & 2', date: 'Given: 2026-03-01', status: 'administered' },
+              { name: 'Rotavirus Dose 1', date: 'Given: 2026-04-10', status: 'administered' },
+              { name: 'DTaP-IPV-Hib Dose 1', date: 'Due: 2026-07-20', status: 'pending' },
+            ].map((vac, idx) => (
+              <div key={idx} style={{ padding: '12.5px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: idx < 3 ? '1px solid var(--color-border)' : 'none' }}>
+                <div>
+                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{vac.name}</span>
+                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{vac.date}</span>
+                </div>
+                <span style={{
+                  padding: '4px 8px',
+                  borderRadius: '10px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  background: vac.status === 'administered' ? 'var(--baby-secondary)' : 'var(--dev-secondary)',
+                  color: vac.status === 'administered' ? 'var(--baby-primary)' : 'var(--dev-primary)'
+                }}>
+                  {vac.status}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Allergies & Notes */}
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>Allergies & Medical Alerts</span>
+            <div style={{ background: 'var(--bg-app)', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '16px' }}>🍃</span>
+              <span style={{ fontSize: '13px', color: 'var(--color-text-primary)', fontWeight: '600' }}>No known drug/food allergies reported.</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 8: PHOTOS & MEMORIES */}
+      {activeSubView === 'memories' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Nursery Photo Log</h2>
+            <button
+              onClick={() => alert('Simulator Photo Upload dialog opened!')}
+              className="badge"
+              style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', fontWeight: '700', cursor: 'pointer' }}
+            >
+              <Camera size={12} style={{ marginRight: '4px' }} /> Add Photo
+            </button>
+          </div>
+
+          {/* Memories grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            {[
+              { title: 'Coming Home', date: 'Feb 12, 2026', img: '/mother_baby.png' },
+              { title: 'First Sweet Smile', date: 'Mar 15, 2026', img: '/baby_sleep.png' },
+              { title: 'Nursery Setup Done', date: 'Jan 28, 2026', img: '/pregnancy.png' },
+              { title: 'Tummy Time Win', date: 'Apr 02, 2026', img: '/mother_baby.png' }
+            ].map((mem, idx) => (
+              <div key={idx} style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--color-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <img src={mem.img} alt={mem.title} style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                <div style={{ padding: '10px' }}>
+                  <span style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{mem.title}</span>
+                  <span style={{ display: 'block', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{mem.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 9: NURSERY NOTES */}
+      {activeSubView === 'nursery_notes' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Nursery Logs</h2>
+            <button
+              onClick={() => alert('New nursery note dialog!')}
+              className="badge"
+              style={{ background: 'var(--dev-secondary)', color: 'var(--dev-primary)', border: 'none', fontWeight: '700', cursor: 'pointer' }}
+            >
+              <Plus size={12} /> Add Note
+            </button>
+          </div>
+
+          {/* Timeline of nursery logs */}
+          <div className="timeline-container" style={{ '--theme-color': 'var(--dev-primary)' } as React.CSSProperties}>
+            {[
+              { title: 'Nap Duration Log', desc: '1h 15m (10:00 AM - 11:15 AM). Woke up happy and alert.', time: 'Today 11:15 AM' },
+              { title: 'Breastfeeding Log', desc: '120ml logged. Feeds well without latching issues today.', time: 'Today 08:30 AM' },
+              { title: 'Wet Diaper Checked', desc: 'Logged by Father (Ahmad). Clean skin, no diaper rash.', time: 'Yesterday 09:15 PM' },
+              { title: 'Night Sleep Stretch', desc: 'Slept continuous 6 hours from 10 PM to 4 AM. Good pattern!', time: 'Yesterday 06:00 AM' }
+            ].map((note, index) => (
+              <div key={index} className="timeline-item">
+                <div className="timeline-dot completed"></div>
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{note.title}</span>
+                    <span style={{ fontSize: '9.5px', color: 'var(--color-text-secondary)' }}>{note.time}</span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>{note.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 10: PRIVACY POLICY */}
+      {activeSubView === 'privacy_policy' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Privacy Policy</h2>
+          
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '16px', maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Data Privacy Principles</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                At Bamudi Compass, we treat child data with high-grade security. All uploaded growth data, vaccine history logs, and co-parent details are encrypted both in transit and at rest.
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. Information Sharing & Co-Parents</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                Your child's profile metrics are only shared with the co-parent account you explicitly authorize via email invitation. We never sell, lease, or distribute data to third-party advertisers.
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. GDPR and COPPA Compliance</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                We comply fully with Children's Online Privacy Protection Act (COPPA) standards and general EU-GDPR standards. You have complete rights to request data deletion at any point.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 11: TERMS & CONDITIONS */}
+      {activeSubView === 'terms_conditions' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Terms of Service</h2>
+          
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '16px', maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Acceptance of Terms</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                By creating a nursery profile and inviting partners, you agree to these legal conditions. You are responsible for ensuring invited emails are correct.
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. Nursery Services Disclaimer</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                Bamudi Compass is a digital tracking assistant. All information regarding growth percentiles and vaccination dates are for general tracking purposes and do not replace professional pediatric diagnosis.
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. Account Security</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
+                Please safeguard your credentials. If you detect unauthorized login or shared profile synchronization anomalies, contact support immediately.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 12: HELP CENTER & FAQS */}
+      {activeSubView === 'help_center' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Help Center & FAQs</h2>
+
+          {/* Hotline card */}
+          <div style={{ background: 'var(--article-secondary)', color: 'var(--article-primary)', padding: '16px', borderRadius: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '14.5px', fontWeight: '700' }}>Need Pediatric or Tech Support?</span>
+            <span style={{ fontSize: '12px', opacity: 0.9 }}>Support Hotline available 24/7 for urgent app navigation issues.</span>
+            <strong style={{ fontSize: '15px', marginTop: '8px', display: 'block' }}>Call: 1-800-BAMUDI (226834)</strong>
+          </div>
+
+          {/* Accordion FAQs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {[
+              { q: 'How do I invite a co-parent?', a: 'Go to Invite Partner in your Profile settings and enter their email address. They will receive a secure sync link.' },
+              { q: 'Can I track logs offline?', a: 'Yes, all diaper, nap, and bottle records are saved locally and synced once internet is restored.' },
+              { q: 'How is growth percentile calculated?', a: 'Percentiles are calculated against standard WHO child growth datasets for baby gender & age.' },
+              { q: 'How do I delete data records?', a: 'Under Profile Info, select details and delete child records. This immediately clears all co-parent logs too.' }
+            ].map((faq, idx) => (
+              <details key={idx} style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '12px 14px', cursor: 'pointer' }}>
+                <summary style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)', outline: 'none' }}>
+                  {faq.q}
+                </summary>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
+                  {faq.a}
+                </p>
+              </details>
+            ))}
+          </div>
         </div>
       )}
 
