@@ -11,6 +11,7 @@ import {
   Plus,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Search,
   Camera,
   Check,
@@ -29,7 +30,19 @@ import {
   Award,
   BookMarked,
   Key,
-  Trash
+  Trash,
+  MoreHorizontal,
+  Shield,
+  CalendarDays,
+  Lock,
+  FileText,
+  Cloud,
+  RefreshCw,
+  Users,
+  Globe,
+  File,
+  BarChart2,
+  Headset
 } from 'lucide-react';
 
 // Interfaces
@@ -200,6 +213,130 @@ const calculateAgeInMonths = (dobString: string): number => {
   }
   return months >= 0 ? months : 0;
 };
+
+const formatBabyAgeLabel = (dobString: string): string => {
+  const dob = new Date(dobString);
+  const today = new Date();
+  if (today < dob) return 'Newborn';
+  let months = (today.getFullYear() - dob.getFullYear()) * 12 + (today.getMonth() - dob.getMonth());
+  let days = today.getDate() - dob.getDate();
+  if (days < 0) {
+    months -= 1;
+    days += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+  }
+  if (months < 0) return 'Newborn';
+  if (months === 0) return `${days} days`;
+  return `${months} months, ${days} days`;
+};
+
+/** Approximate WHO boy medians + 10th/90th bands for chart (kg / cm) */
+const WHO_GROWTH: Record<'weight' | 'height' | 'head', { median: number[]; p10: number[]; p90: number[]; unit: string }> = {
+  weight: {
+    unit: 'kg',
+    median: [3.3, 4.5, 5.6, 6.4, 7.0, 7.5],
+    p10: [2.9, 3.9, 4.9, 5.6, 6.1, 6.5],
+    p90: [3.9, 5.1, 6.3, 7.2, 7.9, 8.5]
+  },
+  height: {
+    unit: 'cm',
+    median: [49.9, 54.7, 58.4, 61.4, 63.9, 65.9],
+    p10: [48.0, 52.5, 56.0, 58.8, 61.1, 63.0],
+    p90: [51.8, 56.9, 60.8, 64.0, 66.7, 68.9]
+  },
+  head: {
+    unit: 'cm',
+    median: [34.5, 37.3, 39.1, 40.5, 41.6, 42.6],
+    p10: [33.1, 35.8, 37.5, 38.9, 40.0, 40.9],
+    p90: [35.8, 38.7, 40.6, 42.0, 43.2, 44.2]
+  }
+};
+
+const estimatePercentile = (value: number, median: number, p10: number, p90: number): number => {
+  if (value <= p10) return Math.max(5, Math.round(10 - ((p10 - value) / (p10 || 1)) * 5));
+  if (value >= p90) return Math.min(95, Math.round(90 + ((value - p90) / (p90 || 1)) * 5));
+  if (value <= median) {
+    const t = (value - p10) / ((median - p10) || 1);
+    return Math.round(10 + t * 40);
+  }
+  const t = (value - median) / ((p90 - median) || 1);
+  return Math.round(50 + t * 40);
+};
+
+const ordinal = (n: number) => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
+/* —— Icons / illustrations from nursery_app_design.tsx —— */
+const NurseryMoonIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="8" height="8">
+    <path d="M21.53 15.93c-.16-.27-.61-.69-1.73-.49a8.46 8.46 0 01-1.88.13 8.409 8.409 0 01-5.91-2.82 8.068 8.068 0 01-1.44-8.66c.44-1.01.13-1.54-.09-1.81s-.77-.55-1.83-.15A10.32 10.32 0 002.4 8.87a10.267 10.267 0 000 10.51 10.267 10.267 0 0010.51 0 10.32 10.32 0 006.75-6.43c.4-1.06.1-1.81-.13-2.02z" />
+  </svg>
+);
+
+const NurseryBottleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="8" height="8">
+    <path d="M15.5 8V4.5A2.5 2.5 0 0 0 13 2h-2a2.5 2.5 0 0 0-2.5 2.5V8A4.5 4.5 0 0 0 4 12.5v7A2.5 2.5 0 0 0 6.5 22h11a2.5 2.5 0 0 0 2.5-2.5v-7A4.5 4.5 0 0 0 15.5 8ZM10.5 4.5A.5.5 0 0 1 11 4h2a.5.5 0 0 1 .5.5V6h-3v-1.5ZM18 19.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-7A2.5 2.5 0 0 1 8.5 10h7A2.5 2.5 0 0 1 18 12.5v7Z" />
+  </svg>
+);
+
+const NurseryDropIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="8" height="8">
+    <path d="M12 21a7 7 0 0 1-7-7c0-2.05.84-4.54 2.87-7.25C9.07 5.14 10.64 3.32 12 1.63c1.36 1.69 2.93 3.51 4.13 5.12C18.16 9.46 19 11.95 19 14a7 7 0 0 1-7 7Z" />
+  </svg>
+);
+
+const PasswordLockIcon = () => (
+  <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bamudiLockGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#8A9DF9" />
+        <stop offset="100%" stopColor="#6C63FF" />
+      </linearGradient>
+    </defs>
+    <rect x="25" y="45" width="50" height="40" rx="12" fill="url(#bamudiLockGrad)" />
+    <path d="M 35 45 L 35 35 C 35 22 65 22 65 35 L 65 45" fill="none" stroke="#A7C1FF" strokeWidth="8" strokeLinecap="round" />
+    <text x="50" y="70" fontFamily="sans-serif" fontSize="16" fill="white" textAnchor="middle" fontWeight="bold">***</text>
+  </svg>
+);
+
+const PrivacyShieldIcon = () => (
+  <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bamudiShieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#A29BFE" />
+        <stop offset="100%" stopColor="#6C5CE7" />
+      </linearGradient>
+    </defs>
+    <path d="M 50 15 L 20 25 L 20 50 C 20 70 40 85 50 90 C 60 85 80 70 80 50 L 80 25 Z" fill="url(#bamudiShieldGrad)" />
+    <rect x="42" y="45" width="16" height="12" rx="3" fill="white" />
+    <path d="M 46 45 L 46 40 C 46 36 54 36 54 40 L 54 45" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+const TermsDocIcon = () => (
+  <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="30" y="20" width="40" height="55" rx="4" fill="#F8F9FA" stroke="#E2E8F0" strokeWidth="2" />
+    <line x1="40" y1="35" x2="60" y2="35" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round" />
+    <line x1="40" y1="45" x2="60" y2="45" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round" />
+    <line x1="40" y1="55" x2="55" y2="55" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="65" cy="70" r="12" fill="#FFA502" />
+    <path d="M 60 70 L 63 73 L 70 66" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const GreatJobCloud = () => (
+  <svg viewBox="0 0 100 100" width="56" height="56" className="nursery-cloud-svg">
+    <path d="M 25 70 C 15 70 10 60 15 50 C 15 40 25 35 35 40 C 40 25 60 20 70 35 C 80 30 90 40 85 55 C 90 65 80 70 70 70 Z" fill="#E6EEF9" />
+    <path d="M 25 68 C 15 68 10 58 15 48 C 15 38 25 33 35 38 C 40 23 60 18 70 33 C 80 28 90 38 85 53 C 90 63 80 68 70 68 Z" fill="#FFFFFF" />
+    <circle cx="45" cy="50" r="3" fill="#4A5568" />
+    <circle cx="65" cy="50" r="3" fill="#4A5568" />
+    <path d="M 52 55 Q 55 58 58 55" fill="none" stroke="#4A5568" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="40" cy="53" r="3" fill="#FFB6C1" opacity="0.6" />
+    <circle cx="70" cy="53" r="3" fill="#FFB6C1" opacity="0.6" />
+  </svg>
+);
 
 // Dynamic baby checkup reminders based on DOB (days after birth)
 const getBabyCalendarEvents = (baby: ChildProfile): CalendarEvent[] => {
@@ -515,44 +652,16 @@ export default function App() {
     <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="60" cy="60" r="54" fill="url(#splash_circle_grad)" />
       <path d="M60 25C40 25 32 45 32 60C32 75 42 88 60 88C78 88 88 75 88 60C88 45 80 25 60 25ZM60 80C47 80 42 70 42 60C42 49 48 37 60 37C72 37 78 49 78 60C78 70 73 80 60 80Z" fill="#FFFFFF" />
-      <path d="M60 44C51 44 48 51 48 58C48 65 52 71 60 71C68 71 72 65 72 58C72 51 69 44 60 44ZM60 65C56 65 54 62 54 58C54 54 56 50 60 50C64 50 66 54 66 58C66 62 64 65 60 65Z" fill="#FFA8BD" />
+      <path d="M60 44C51 44 48 51 48 58C48 65 52 71 60 71C68 71 72 65 72 58C72 51 69 44 60 44ZM60 65C56 65 54 62 54 58C54 54 56 50 60 50C64 50 66 54 66 58C66 62 64 65 60 65Z" fill="#FFC9A3" />
       <path d="M60 52C58 52 57.5 53.5 57.5 55C57.5 56.5 58 58 60 58C62 58 62.5 56.5 62.5 55C62.5 53.5 62 52 60 52Z" fill="#FFFFFF" />
       <defs>
         <linearGradient id="splash_circle_grad" x1="60" y1="6" x2="60" y2="114" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F46B8A" />
-          <stop offset="1" stopColor="#FFA8BD" />
+          <stop stopColor="#E07A4A" />
+          <stop offset="1" stopColor="#F0A06E" />
         </linearGradient>
       </defs>
     </svg>
   );
-
-  const drawOnboardingIllustration = (slideIndex: number) => {
-    if (slideIndex === 0) {
-      return (
-        <img
-          src="/mother_baby.png"
-          alt="Onboarding 1"
-          style={{ width: '220px', height: '180px', objectFit: 'cover', borderRadius: '24px', boxShadow: 'var(--shadow-premium)', border: '4px solid #FFF' }}
-        />
-      );
-    } else if (slideIndex === 1) {
-      return (
-        <img
-          src="/baby_sleep.png"
-          alt="Onboarding 2"
-          style={{ width: '220px', height: '180px', objectFit: 'cover', borderRadius: '24px', boxShadow: 'var(--shadow-premium)', border: '4px solid #FFF' }}
-        />
-      );
-    } else {
-      return (
-        <img
-          src="/pregnancy.png"
-          alt="Onboarding 3"
-          style={{ width: '220px', height: '180px', objectFit: 'cover', borderRadius: '24px', boxShadow: 'var(--shadow-premium)', border: '4px solid #FFF' }}
-        />
-      );
-    }
-  };
 
   // OTP Simulated Input click helper
   const handleOtpKeyPress = (num: number) => {
@@ -803,27 +912,24 @@ export default function App() {
               
               {/* FLOW 1: SPLASH SCREEN */}
               {appFlow === 'splash' && (
-                <div className="screen-scroll-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', paddingBottom: '20px' }}>
+                <div className="screen-scroll-container onboarding-splash" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', paddingBottom: '20px' }}>
                   <div className="animate-splash" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center' }}>
                     {drawSplashLogo()}
                     <div>
-                      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', color: 'var(--color-text-primary)', fontWeight: '800' }}>Bamudi Kompass</h2>
-                      <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px', marginTop: '6px', fontWeight: '500' }}>Your Parenting Compass & Guide</p>
+                      <h2 style={{ fontFamily: 'var(--font-brand)', fontSize: '34px', color: '#3D2B1F', fontWeight: '700' }}>Bamudi</h2>
+                      <p style={{ color: '#7BA87A', fontSize: '15px', marginTop: '6px', fontWeight: '600' }}>Sanfter Wehen-Timer</p>
                     </div>
                   </div>
                   <div style={{ position: 'absolute', bottom: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '40px', height: '4px', background: 'var(--mother-primary)', borderRadius: '10px' }} />
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: '600' }}>LOADING YOUR COMPANION</span>
+                    <div style={{ width: '40px', height: '4px', background: '#E07A4A', borderRadius: '10px' }} />
+                    <span style={{ fontSize: '11px', color: '#8A7464', fontWeight: '600' }}>LOADING YOUR COMPANION</span>
                   </div>
                 </div>
               )}
 
               {/* FLOW 2: ONBOARDING */}
               {appFlow === 'onboarding' && (
-                <OnboardingScreen
-                  drawOnboardingIllustration={drawOnboardingIllustration}
-                  onFinish={() => setAppFlow('signup')}
-                />
+                <OnboardingScreen onFinish={() => setAppFlow('signup')} />
               )}
 
               {/* FLOW 3: SIGN UP */}
@@ -1919,79 +2025,151 @@ export default function App() {
 // COMPONENTS DEFINITIONS
 // ----------------------------------------------------
 
-// 1. ONBOARDING SCREEN
-function OnboardingScreen({
-  drawOnboardingIllustration,
-  onFinish
-}: {
-  drawOnboardingIllustration: (slideIndex: number) => React.ReactNode;
-  onFinish: () => void;
-}) {
+// 1. ONBOARDING SCREEN — Bamudi warm cream / orange flow
+function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
   const [slide, setSlide] = useState(0);
-  const slidesData = [
+
+  const slides = [
     {
-      title: 'Bamudi Kompass',
-      desc: 'Guidance, Care, Growth. All in one place for every mom.',
-      color: 'var(--mother-primary)'
+      type: 'welcome' as const,
+      title: 'Bamudi',
+      accent: '',
+      subtitle: 'Sanfter Wehen-Timer',
+      desc: 'Dauer, Abstand & Verlauf einfach im Blick',
+      image: null
     },
     {
-      title: 'Interactive Care',
-      desc: 'Personalized checklists, reminders, and child timelines.',
-      color: 'var(--baby-primary)'
+      type: 'feature' as const,
+      icon: 'pulse' as const,
+      title: 'Understand contractions',
+      accent: 'with ease.',
+      desc: 'Automatically track duration, intervals, and progress so you stay informed and in control.',
+      image: '/pregnancy.png'
     },
     {
-      title: 'Expert Learning',
-      desc: 'Scandinavian-inspired design with premium verified guides.',
-      color: 'var(--article-primary)'
+      type: 'feature' as const,
+      icon: 'chart' as const,
+      title: 'Track your progress.',
+      accent: 'Every day.',
+      desc: 'Review your contraction history and identify patterns over time with clear charts and insights.',
+      image: '/mother_baby.png'
+    },
+    {
+      type: 'feature' as const,
+      icon: 'heart' as const,
+      title: 'Stronger together.',
+      accent: 'Always connected.',
+      desc: 'Invite your partner, share live updates, and stay close through every moment of the journey.',
+      image: '/baby_sleep.png'
+    },
+    {
+      type: 'feature' as const,
+      icon: 'shield' as const,
+      title: 'Be ready when the moment comes.',
+      accent: "You've got this.",
+      desc: 'Checklists, reminders, and calm guidance so you feel prepared when it matters most.',
+      image: '/pregnancy.png'
     }
   ];
 
+  const current = slides[slide];
+  const isLast = slide === slides.length - 1;
+
   const handleNext = () => {
-    if (slide < 2) {
-      setSlide(slide + 1);
-    } else {
-      onFinish();
-    }
+    if (!isLast) setSlide(slide + 1);
+    else onFinish();
+  };
+
+  const renderIcon = (icon: 'pulse' | 'chart' | 'heart' | 'shield') => {
+    if (icon === 'pulse') return <Activity size={18} strokeWidth={2.4} />;
+    if (icon === 'chart') return <TrendingUp size={18} strokeWidth={2.4} />;
+    if (icon === 'heart') return <Heart size={18} strokeWidth={2.4} />;
+    return <Shield size={18} strokeWidth={2.4} />;
   };
 
   return (
-    <div className="screen-scroll-container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', paddingBottom: '30px' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '30px', marginTop: '20px' }}>
-        {drawOnboardingIllustration(slide)}
-        
-        <div style={{ textAlign: 'center', padding: '0 10px' }}>
-          <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)' }}>
-            {slidesData[slide].title}
-          </h2>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px', marginTop: '10px', lineHeight: '1.4', maxWidth: '280px', margin: '10px auto 0 auto' }}>
-            {slidesData[slide].desc}
-          </p>
-        </div>
-      </div>
+    <div className={`onboarding-screen ${current.type === 'welcome' ? 'is-welcome' : 'is-feature'}`}>
+      {current.type !== 'welcome' && (
+        <button type="button" className="onboarding-skip" onClick={onFinish}>
+          Skip
+        </button>
+      )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-        {/* Slides Indicator dots */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[0, 1, 2].map(idx => (
-            <div
+      {current.type === 'welcome' ? (
+        <div className="onboarding-welcome">
+          <div className="onboarding-welcome-art" aria-hidden="true">
+            <svg className="ob-hills" viewBox="0 0 360 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 180C40 150 80 200 120 170C160 140 190 110 230 130C270 150 300 120 360 140V280H0V180Z" fill="#E8D5C4" opacity="0.55" />
+              <path d="M0 210C50 185 90 230 140 200C190 170 230 160 280 185C320 205 340 190 360 200V280H0V210Z" fill="#D4B89A" opacity="0.45" />
+              <circle cx="290" cy="70" r="28" fill="#F5C78E" opacity="0.5" />
+              <path d="M40 160C55 120 85 125 95 155C75 150 55 155 40 160Z" fill="#7BA87A" opacity="0.55" />
+              <path d="M300 155C320 125 345 130 350 155C335 152 315 152 300 155Z" fill="#7BA87A" opacity="0.45" />
+              <path d="M70 200C78 175 98 178 102 198C90 196 78 198 70 200Z" fill="#E07A4A" opacity="0.35" />
+              <path d="M250 195C262 172 282 176 286 196C272 194 258 194 250 195Z" fill="#E07A4A" opacity="0.3" />
+            </svg>
+            <div className="ob-mascot">
+              <svg width="112" height="112" viewBox="0 0 112 112" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="56" cy="98" rx="28" ry="6" fill="#C4A484" opacity="0.35" />
+                <path d="M28 58C28 38 40 24 56 24C72 24 84 38 84 58V78C84 88 74 94 56 94C38 94 28 88 28 78V58Z" fill="#8B5E3C" />
+                <path d="M34 52C30 40 22 36 18 42C14 48 20 58 28 62" fill="#A06B45" />
+                <path d="M78 52C82 40 90 36 94 42C98 48 92 58 84 62" fill="#A06B45" />
+                <ellipse cx="44" cy="56" rx="5" ry="6" fill="#2C1810" />
+                <ellipse cx="68" cy="56" rx="5" ry="6" fill="#2C1810" />
+                <ellipse cx="45.5" cy="54.5" rx="1.6" ry="2" fill="#FFF" />
+                <ellipse cx="69.5" cy="54.5" rx="1.6" ry="2" fill="#FFF" />
+                <path d="M50 66C52 70 60 70 62 66" stroke="#5C3A22" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M48 78C50 84 62 84 64 78" fill="#C4785A" />
+                <circle cx="38" cy="68" r="5" fill="#C4785A" opacity="0.55" />
+                <circle cx="74" cy="68" r="5" fill="#C4785A" opacity="0.55" />
+                <path d="M42 30C36 18 44 10 52 16" stroke="#8B5E3C" strokeWidth="7" strokeLinecap="round" />
+                <path d="M70 30C76 18 68 10 60 16" stroke="#8B5E3C" strokeWidth="7" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="onboarding-welcome-copy">
+            <h1 className="onboarding-brand">{current.title}</h1>
+            <p className="onboarding-subtitle-de">{current.subtitle}</p>
+            <p className="onboarding-desc-welcome">{current.desc}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="onboarding-feature">
+          <div className="onboarding-feature-copy">
+            <div className="onboarding-feature-icon">{renderIcon(current.icon)}</div>
+            <h2 className="onboarding-feature-title">
+              {current.title}{' '}
+              <span className="onboarding-accent">{current.accent}</span>
+            </h2>
+            <p className="onboarding-feature-desc">{current.desc}</p>
+          </div>
+          <div className="onboarding-feature-media">
+            <img src={current.image!} alt="" />
+            <div className="onboarding-media-fade" />
+            {(current.icon === 'pulse' || current.icon === 'heart') && (
+              <div className="onboarding-hearts" aria-hidden="true">
+                <Heart size={14} fill="currentColor" />
+                <Heart size={10} fill="currentColor" />
+                <Heart size={12} fill="currentColor" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="onboarding-footer">
+        <div className="onboarding-dots">
+          {slides.map((_, idx) => (
+            <button
               key={idx}
-              style={{
-                width: idx === slide ? '24px' : '8px',
-                height: '8px',
-                borderRadius: '4px',
-                backgroundColor: idx === slide ? slidesData[slide].color : 'var(--color-border)',
-                transition: 'all 0.3s ease'
-              }}
+              type="button"
+              className={`onboarding-dot ${idx === slide ? 'active' : ''}`}
+              onClick={() => setSlide(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
             />
           ))}
         </div>
-
-        <button
-          className="btn-primary"
-          onClick={handleNext}
-          style={{ '--theme-color': slidesData[slide].color } as React.CSSProperties}
-        >
-          {slide === 2 ? 'Get Started' : 'Next'} <ChevronRight size={18} />
+        <button type="button" className="onboarding-next" onClick={handleNext}>
+          {isLast ? 'Get Started' : 'Next'}
         </button>
       </div>
     </div>
@@ -3016,7 +3194,13 @@ function MoreModule({
     }
   }, [activeChildIndex, children]);
 
-  const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head' | 'bmi'>('weight');
+  const [growthMetricTab, setGrowthMetricTab] = useState<'weight' | 'height' | 'head'>('weight');
+  const [growthSourceView, setGrowthSourceView] = useState<'growth_tracker' | 'nursery_notes'>('growth_tracker');
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [expandedLegalId, setExpandedLegalId] = useState<string | null>(null);
+  const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
   const [reminderFilterTab, setReminderFilterTab] = useState<'today' | 'tomorrow' | 'week'>('today');
   const [partnerEmail, setPartnerEmail] = useState('');
   
@@ -3066,11 +3250,15 @@ function MoreModule({
       {activeSubView !== 'menu' && (
         <button
           onClick={() => {
-            setActiveSubView('menu');
+            if (activeSubView === 'growth_log_history') {
+              setActiveSubView(growthSourceView);
+            } else {
+              setActiveSubView('menu');
+            }
           }}
           style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: '600', marginBottom: '14px', paddingLeft: '0' }}
         >
-          <ChevronLeft size={16} /> Back to Settings
+          <ChevronLeft size={16} /> {activeSubView === 'growth_log_history' ? 'Back to Growth' : 'Back to Settings'}
         </button>
       )}
 
@@ -3121,7 +3309,7 @@ function MoreModule({
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
 
-            <div className="profile-list-row" onClick={() => setActiveSubView('growth_tracker')} style={{ '--theme-color': 'var(--dev-primary)', '--theme-bg': 'var(--dev-secondary)' } as React.CSSProperties}>
+            <div className="profile-list-row" onClick={() => { setGrowthSourceView('growth_tracker'); setActiveSubView('growth_tracker'); }} style={{ '--theme-color': 'var(--dev-primary)', '--theme-bg': 'var(--dev-secondary)' } as React.CSSProperties}>
               <div className="profile-row-icon-wrapper">
                 <TrendingUp size={18} />
               </div>
@@ -3176,7 +3364,7 @@ function MoreModule({
               </div>
               <div className="profile-row-title-container">
                 <span className="profile-row-title">Nursery Logs</span>
-                <span className="profile-row-desc">Feeding, sleeping, and wet diaper logs</span>
+                <span className="profile-row-desc">Feeding, sleep & diaper recent logs</span>
               </div>
               <ChevronRight size={16} color="var(--color-text-secondary)" />
             </div>
@@ -3681,9 +3869,15 @@ function MoreModule({
         </div>
       )}
 
-      {/* VIEW 3: GROWTH TRACKER */}
-      {activeSubView === 'growth_tracker' && (() => {
-        const logs = currentBaby.growthLogs && currentBaby.growthLogs.length > 0
+      {/* VIEW 3: GROWTH TRACKER (design Variant 1) */}
+      {(activeSubView === 'growth_tracker' || activeSubView === 'growth_log_history') && (() => {
+        const isHistoryView = activeSubView === 'growth_log_history';
+        const who = WHO_GROWTH[growthMetricTab];
+        const unit = who.unit;
+        const metricLabel = growthMetricTab === 'weight' ? 'Weight' : growthMetricTab === 'height' ? 'Height' : 'Head Circ.';
+        const curveTitle = growthMetricTab === 'weight' ? 'Weight Curve (kg)' : growthMetricTab === 'height' ? 'Height Curve (cm)' : 'Head Circ. (cm)';
+
+        const logs: GrowthLog[] = currentBaby.growthLogs && currentBaby.growthLogs.length > 0
           ? currentBaby.growthLogs
           : [
               { id: '1', age: 'Month 1', weight: 3.2, height: 51, head: 34.2, date: '2026-03-12' },
@@ -3691,134 +3885,339 @@ function MoreModule({
               { id: '3', age: 'Month 3', weight: 4.8, height: 57, head: 36.8, date: '2026-05-12' },
               { id: '4', age: 'Month 5 (Now)', weight: 5.6, height: 62, head: 38.5, date: '2026-07-12' }
             ];
-        const latestLogs = logs.slice(-4);
-        const values = latestLogs.map((l: any) => {
-          if (growthMetricTab === 'weight') return l.weight;
-          if (growthMetricTab === 'height') return l.height;
-          if (growthMetricTab === 'head') return l.head;
-          const w = l.weight;
-          const h = l.height;
-          return h ? parseFloat((w / ((h / 100) * (h / 100))).toFixed(1)) : 15.0;
-        });
 
-        const minVal = Math.min(...values);
-        const maxVal = Math.max(...values);
-        const range = maxVal - minVal || 1;
-        const yCoords = values.map((val: number) => {
-          return 90 - ((val - minVal) / range) * 65;
-        });
+        const getMetricVal = (l: GrowthLog) =>
+          growthMetricTab === 'weight' ? l.weight : growthMetricTab === 'height' ? l.height : l.head;
 
-        // Generate smooth SVG curve segments
-        const pathD = `M 0 ${yCoords[0]} Q 75 ${yCoords[1]} 150 ${yCoords[2]} T 300 ${yCoords[3]}`;
-        const fillD = `M 0 ${yCoords[0]} Q 75 ${yCoords[1]} 150 ${yCoords[2]} T 300 ${yCoords[3]} L 300 120 L 0 120 Z`;
+        const chartW = 300;
+        const chartH = 140;
+        const padY = 18;
+        const allVals = [...who.p10, ...who.p90, ...logs.map(getMetricVal)];
+        const minY = Math.min(...allVals) - 0.4;
+        const maxY = Math.max(...allVals) + 0.4;
+        const toX = (i: number, n: number) => (n <= 1 ? chartW / 2 : (i / (n - 1)) * chartW);
+        const toY = (v: number) => padY + (1 - (v - minY) / (maxY - minY || 1)) * (chartH - padY * 2);
 
-        return (
-          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Growth Tracker</h2>
+        const whoXs = who.median.map((_, i) => toX(i, who.median.length));
+        const bandPath = [
+          ...who.p90.map((v, i) => `${i === 0 ? 'M' : 'L'} ${whoXs[i]} ${toY(v)}`),
+          ...[...who.p10].reverse().map((v, i) => `L ${whoXs[who.p10.length - 1 - i]} ${toY(v)}`),
+          'Z'
+        ].join(' ');
+        const whoLine = who.median.map((v, i) => `${i === 0 ? 'M' : 'L'} ${whoXs[i]} ${toY(v)}`).join(' ');
+
+        const babyPoints = logs.map((l, i) => ({
+          x: toX(i, Math.max(logs.length, 2)),
+          y: toY(getMetricVal(l)),
+          val: getMetricVal(l),
+          log: l
+        }));
+        const babyLine = babyPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+        const latestPt = babyPoints[babyPoints.length - 1];
+        const prevPt = babyPoints[babyPoints.length - 2];
+        const ageMonths = Math.min(5, Math.max(0, calculateAgeInMonths(currentBaby.dob)));
+        const whoIdx = Math.min(who.median.length - 1, ageMonths);
+        const latestVal = latestPt?.val ?? (growthMetricTab === 'weight' ? currentBaby.weight : growthMetricTab === 'height' ? currentBaby.height : currentBaby.head || 38.5);
+        const pct = estimatePercentile(latestVal, who.median[whoIdx], who.p10[whoIdx], who.p90[whoIdx]);
+        const delta = prevPt ? +(latestVal - prevPt.val).toFixed(1) : 0;
+        const latestDateLabel = latestPt
+          ? new Date(latestPt.log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          : '';
+
+        const openHistory = () => {
+          setGrowthSourceView('growth_tracker');
+          setActiveSubView('growth_log_history');
+        };
+
+        const metricTabs = (
+          <div className="growth-tabs">
+            {([
+              { key: 'weight' as const, label: 'Weight' },
+              { key: 'height' as const, label: 'Height' },
+              { key: 'head' as const, label: 'Head Circ.' }
+            ]).map(tab => (
               <button
-                onClick={() => setShowAddGrowthModal(true)}
-                className="badge"
-                style={{ background: 'var(--baby-secondary)', color: 'var(--baby-primary)', border: 'none', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                key={tab.key}
+                onClick={() => setGrowthMetricTab(tab.key)}
+                className={`growth-tab-btn ${growthMetricTab === tab.key ? 'active' : ''}`}
               >
-                <Plus size={12} /> Log Metric
+                {tab.label}
               </button>
-            </div>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
-              Logged by Mother {authName} for active child {currentBaby.name} ({currentBaby.gender})
-            </p>
+            ))}
+          </div>
+        );
 
-            {/* Metric Selector Tabs */}
-            <div className="growth-tabs">
-              {(['weight', 'height', 'head', 'bmi'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setGrowthMetricTab(tab)}
-                  className={`growth-tab-btn ${growthMetricTab === tab ? 'active' : ''}`}
+        const chartCard = (
+          <div className="growth-chart-container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{curveTitle}</span>
+              <span style={{ fontSize: '12px', color: 'var(--baby-primary)', fontWeight: '700' }}>
+                Latest: {latestVal} {unit}
+              </span>
+            </div>
+
+            <div className="growth-chart-svg-wrap">
+              <svg width="100%" height="100%" viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="none">
+                <path d={bandPath} fill="rgba(83, 200, 139, 0.14)" />
+                <path d={whoLine} stroke="var(--baby-primary)" strokeWidth="2" fill="none" strokeDasharray="5 4" opacity="0.55" />
+                <path d={babyLine} stroke="var(--baby-primary)" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                {babyPoints.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={i === babyPoints.length - 1 ? 5.5 : 4} fill="var(--baby-primary)" stroke="#fff" strokeWidth="1.5" />
+                ))}
+              </svg>
+              {latestPt && (
+                <div
+                  className="growth-chart-tooltip"
+                  style={{ left: `${Math.min(86, Math.max(14, (latestPt.x / chartW) * 100))}%` }}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
+                  {latestVal} {unit}{latestDateLabel ? `, ${latestDateLabel}` : ''}
+                </div>
+              )}
+            </div>
+
+            <div className="growth-chart-axis">
+              {['Birth', '1m', '2m', '3m', '4m', '5m'].map(label => (
+                <span key={label}>{label}</span>
               ))}
             </div>
 
-            {/* SVG Graph container */}
-            <div className="growth-chart-container">
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-primary)' }}>
-                  {growthMetricTab === 'weight' ? 'Weight Curve (kg)' : growthMetricTab === 'height' ? 'Height Curve (cm)' : growthMetricTab === 'head' ? 'Head Circ. (cm)' : 'BMI curve'}
-                </span>
-                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: '700' }}>
-                  Latest: {
-                    (() => {
-                      if (growthMetricTab === 'weight') return `${currentBaby.weight} kg`;
-                      if (growthMetricTab === 'height') return `${currentBaby.height} cm`;
-                      if (growthMetricTab === 'head') return `${currentBaby.head || 38.5} cm`;
-                      const w = currentBaby.weight;
-                      const h = currentBaby.height;
-                      return h ? (w / ((h / 100) * (h / 100))).toFixed(1) : '15.0';
-                    })()
-                  }
-                </span>
-              </div>
-
-              <div style={{ width: '100%', height: '140px', background: 'var(--bg-app)', borderRadius: '14px', padding: '10px', position: 'relative' }}>
-                <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <line x1="0" y1="80" x2="300" y2="80" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
-                  <line x1="0" y1="40" x2="300" y2="40" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
-                  <path d={fillD} fill="rgba(83, 200, 139, 0.1)" />
-                  <path d={pathD} stroke="var(--baby-primary)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-                  <circle cx="0" cy={yCoords[0]} r="4.5" fill="var(--baby-primary)" />
-                  <circle cx="75" cy={yCoords[1]} r="4.5" fill="var(--baby-primary)" />
-                  <circle cx="150" cy={yCoords[2]} r="4.5" fill="var(--baby-primary)" />
-                  <circle cx="300" cy={yCoords[3]} r="5.5" fill="var(--baby-primary)" />
-                </svg>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '8px', padding: '0 4px' }}>
-                {latestLogs.map((l: any, index: number) => (
-                  <span key={index}>{l.age}</span>
-                ))}
-              </div>
+            <div className="growth-chart-legend">
+              <span><i className="legend-dot" /> {currentBaby.name}</span>
+              <span><i className="legend-dash" /> Average (WHO)</span>
+              <span><i className="legend-band" /> 10th – 90th %ile</span>
             </div>
+          </div>
+        );
 
-            {/* Metric list Table */}
-            <div style={{ marginTop: '10px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Log History</h4>
+        const historyRows = [...logs].reverse().map((l) => {
+          const val = getMetricVal(l);
+          const m = Math.min(5, Math.max(0, parseInt(String(l.age).replace(/\D/g, ''), 10) || ageMonths));
+          const rowPct = estimatePercentile(val, who.median[m], who.p10[m], who.p90[m]);
+          return (
+            <tr key={l.id}>
+              <td>{new Date(l.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+              <td>{l.age}</td>
+              <td>{val} {unit}</td>
+              <td>{ordinal(rowPct)}</td>
+            </tr>
+          );
+        });
+
+        if (isHistoryView) {
+          return (
+            <div className="animate-fade-in growth-screen" style={{ display: 'flex', flexDirection: 'column', gap: '14px', paddingBottom: '72px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Log History</h2>
+                <button type="button" style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: 4 }}>
+                  <MoreHorizontal size={20} />
+                </button>
+              </div>
+
+              {metricTabs}
+              {chartCard}
+
+              <div className="growth-checkup-card">
+                <div className="growth-checkup-icon">
+                  <CalendarDays size={18} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <span className="growth-checkup-label">Next checkup</span>
+                  <span className="growth-checkup-date">May 20, 2025</span>
+                </div>
+                <span className="growth-checkup-eta">In 2 months</span>
+              </div>
+
               <div style={{ background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
                 <table className="growth-history-table">
                   <thead>
                     <tr>
+                      <th>Date</th>
                       <th>Age</th>
-                      <th>{growthMetricTab.toUpperCase()}</th>
+                      <th>{metricLabel}</th>
                       <th>Percentile</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {[...latestLogs].reverse().map((l: any, index: number) => {
-                      const val = (() => {
-                        if (growthMetricTab === 'weight') return `${l.weight} kg`;
-                        if (growthMetricTab === 'height') return `${l.height} cm`;
-                        if (growthMetricTab === 'head') return `${l.head} cm`;
-                        const w = l.weight;
-                        const h = l.height;
-                        return h ? (w / ((h / 100) * (h / 100))).toFixed(1) : '15.0';
-                      })();
-                      const percentiles = [74, 70, 68, 65];
-                      const pct = percentiles[index % percentiles.length] + '%';
-                      return (
-                        <tr key={l.id || index}>
-                          <td>{l.age}</td>
-                          <td>{val}</td>
-                          <td>{pct}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
+                  <tbody>{historyRows}</tbody>
                 </table>
+              </div>
+
+              <button
+                type="button"
+                className="growth-add-entry-btn"
+                onClick={() => setShowAddGrowthModal(true)}
+              >
+                <Plus size={16} /> Add New Entry
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <div className="animate-fade-in growth-screen" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Growth</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img
+                  src="/mother_baby.png"
+                  alt={currentBaby.name}
+                  style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--baby-primary)' }}
+                />
+                <button type="button" style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: 4 }}>
+                  <MoreHorizontal size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="growth-baby-card">
+              <img src="/mother_baby.png" alt={currentBaby.name} className="growth-baby-avatar" />
+              <div>
+                <span className="growth-baby-name">{currentBaby.name}</span>
+                <span className="growth-baby-age">{formatBabyAgeLabel(currentBaby.dob)}</span>
+              </div>
+            </div>
+
+            {metricTabs}
+            {chartCard}
+
+            <div className="growth-stats-row">
+              <div className="growth-stat-card">
+                <span className="growth-stat-value">{ordinal(pct)}</span>
+                <span className="growth-stat-label">Percentile</span>
+              </div>
+              <div className="growth-stat-card">
+                <span className="growth-stat-value">{who.median[whoIdx]} {unit}</span>
+                <span className="growth-stat-label">Average (WHO)</span>
+              </div>
+              <div className="growth-stat-card">
+                <span className="growth-stat-value" style={{ color: delta >= 0 ? 'var(--baby-primary)' : 'var(--color-error)' }}>
+                  {delta >= 0 ? '+' : ''}{delta} {unit}
+                </span>
+                <span className="growth-stat-label">vs last month</span>
+              </div>
+            </div>
+
+            <div className="growth-insight-card">
+              <Shield size={16} />
+              <p>
+                {currentBaby.name}&apos;s {growthMetricTab === 'head' ? 'head circumference' : growthMetricTab} is in the{' '}
+                <strong>{ordinal(pct)} percentile</strong> according to WHO growth standards.
+              </p>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '700' }}>Log History</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowAddGrowthModal(true)}
+                  style={{ background: 'none', border: 'none', color: 'var(--baby-primary)', fontSize: 12, fontWeight: 750, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <Plus size={12} /> Add Entry
+                </button>
+              </div>
+              <div
+                style={{ background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', overflow: 'hidden', cursor: 'pointer' }}
+                onClick={openHistory}
+              >
+                <table className="growth-history-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Age</th>
+                      <th>{metricLabel}</th>
+                      <th>Percentile</th>
+                    </tr>
+                  </thead>
+                  <tbody>{historyRows.slice(0, 4)}</tbody>
+                </table>
+                <div style={{ textAlign: 'center', padding: '10px', fontSize: 12, fontWeight: 700, color: 'var(--baby-primary)', borderTop: '1px solid var(--color-border)' }}>
+                  View full history
+                </div>
               </div>
             </div>
           </div>
         );
       })()}
+
+      {/* VIEW 3b: NURSERY LOGS — from nursery_app_design.tsx */}
+      {activeSubView === 'nursery_notes' && (
+        <div className="animate-fade-in nursery-logs-screen">
+          <div className="nursery-logs-header">
+            <h2>{currentBaby.name}&apos;s Nursery Logs</h2>
+            <button type="button" className="nursery-add-note-btn" onClick={() => alert('New nursery note dialog!')}>
+              <Plus size={14} strokeWidth={3} /> Add Note
+            </button>
+          </div>
+
+          <h4 className="nursery-section-label">Recent Logs</h4>
+
+          <div className="nursery-timeline-wrap">
+            <div className="nursery-timeline-line-full" aria-hidden="true" />
+            {[
+              {
+                title: 'Nap Duration Log',
+                time: 'Today, 11:15 AM',
+                details: '1h 15m (10:00 AM - 11:15 AM). Woke up happy and alert.',
+                color: '#FF9B54',
+                timeColor: '#FF9B54',
+                icon: <NurseryMoonIcon />
+              },
+              {
+                title: 'Breastfeeding Log',
+                time: 'Today, 08:30 AM',
+                details: '120ml logged. Feeds well without latching issues today.',
+                color: '#F4C430',
+                timeColor: '#FF9B54',
+                icon: <NurseryBottleIcon />
+              },
+              {
+                title: 'Wet Diaper Checked',
+                time: 'Yesterday, 10:15 PM',
+                details: 'Logged by Father (Ahmad). Clean skin, no diaper rash.',
+                color: '#4B9CE2',
+                timeColor: '#4B9CE2',
+                icon: <NurseryDropIcon />
+              },
+              {
+                title: 'Night Sleep Stretch',
+                time: 'Yesterday, 06:00 AM',
+                details: 'Slept continuous 6 hours from 10 PM to 4 AM. Good pattern!',
+                color: '#9D72FF',
+                timeColor: '#4B9CE2',
+                icon: <NurseryMoonIcon />
+              }
+            ].map((log, index) => (
+              <div key={index} className="nursery-log-row">
+                <div className="nursery-dot" style={{ background: log.color }}>
+                  {log.icon}
+                </div>
+                <div className="nursery-log-card">
+                  <div className="nursery-log-card-top">
+                    <span className="nursery-log-title">{log.title}</span>
+                    <span className="nursery-log-meta" style={{ color: log.timeColor }}>{log.time}</span>
+                  </div>
+                  <p className="nursery-log-note">{log.details}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="nursery-great-job">
+            <div className="nursery-cloud-wrap">
+              <GreatJobCloud />
+              <span className="nursery-sparkle s1">✦</span>
+              <span className="nursery-sparkle s2">✦</span>
+            </div>
+            <div className="nursery-great-copy">
+              <strong>Great job!</strong>
+              <p>You&apos;re doing amazing.<br />Keep up the great work!</p>
+            </div>
+            <button type="button" className="nursery-heart-btn" aria-label="Like">
+              <Heart size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* VIEW 4: REMINDERS LIST */}
       {activeSubView === 'reminders' && (
@@ -4101,190 +4500,180 @@ function MoreModule({
         </div>
       )}
 
-      {/* VIEW 9: NURSERY NOTES */}
-      {activeSubView === 'nursery_notes' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '800' }}>{currentBaby.name}'s Nursery Logs</h2>
+      {/* VIEW 10: PRIVACY POLICY — nursery_app_design */}
+      {activeSubView === 'privacy_policy' && (
+        <div className="animate-fade-in legal-screen">
+          <h2 className="legal-screen-title">Privacy Policy</h2>
+          <div className="legal-hero-illu">
+            <div className="legal-illu-wrap privacy">
+              <div className="legal-illu-blur" />
+              <PrivacyShieldIcon />
+              <span className="legal-sparkle s1">✦</span>
+              <span className="legal-sparkle s2">✦</span>
+            </div>
+            <p>Your privacy and your child&apos;s data protection are our top priorities.</p>
+          </div>
+          <div className="legal-list">
+            {[
+              { id: 'p1', icon: <Shield size={16} />, title: '1. Data Privacy & Encryption', desc: 'All data is encrypted and stored securely using industry-standard protocols.', tone: 'purple' },
+              { id: 'p2', icon: <Lock size={16} />, title: '2. COPPA & Children\'s Data Protection', desc: 'We comply with COPPA regulations to ensure the safety of children\'s data.', tone: 'purple' },
+              { id: 'p3', icon: <Camera size={16} />, title: '3. Camera & Local Gallery Access', desc: 'Photos are stored locally on your device unless you choose to back up.', tone: 'purple' },
+              { id: 'p4', icon: <Globe size={16} />, title: '4. GDPR Rights & Data Control', desc: 'You have full control over your data and can request deletion anytime.', tone: 'blue' },
+              { id: 'p5', icon: <Share2 size={16} />, title: '5. Data Sharing', desc: 'We never sell your data. It is only used to improve your experience.', tone: 'blue' },
+              { id: 'p6', icon: <RefreshCw size={16} />, title: '6. Updates to This Policy', desc: 'We may update this policy. You\'ll be notified of any significant changes.', tone: 'purple' }
+            ].map(item => (
+              <button
+                key={item.id}
+                type="button"
+                className={`legal-list-row ${expandedLegalId === item.id ? 'open' : ''}`}
+                onClick={() => setExpandedLegalId(expandedLegalId === item.id ? null : item.id)}
+              >
+                <div className={`legal-row-icon tone-${item.tone}`}>{item.icon}</div>
+                <div className="legal-row-copy">
+                  <span className="legal-row-title">{item.title}</span>
+                  <span className="legal-row-desc">{item.desc}</span>
+                </div>
+                <ChevronRight size={16} className="legal-chevron" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 11: TERMS — nursery_app_design */}
+      {activeSubView === 'terms_conditions' && (
+        <div className="animate-fade-in legal-screen">
+          <h2 className="legal-screen-title">Terms of Service</h2>
+          <div className="legal-hero-illu">
+            <div className="legal-illu-wrap terms">
+              <div className="legal-illu-blur orange" />
+              <TermsDocIcon />
+              <span className="legal-sparkle s1 orange">✦</span>
+              <span className="legal-sparkle s2 orange">✦</span>
+            </div>
+            <p>Please read these terms carefully. By using our app, you agree to the following.</p>
+          </div>
+          <div className="legal-list">
+            {[
+              { id: 't1', icon: <Lock size={16} />, title: '1. Acceptance of Terms', desc: 'By using this app, you agree to these terms and conditions.' },
+              { id: 't2', icon: <FileText size={16} />, title: '2. Use of the App', desc: 'You agree to use the app only for lawful purposes and in accordance with these terms.' },
+              { id: 't3', icon: <User size={16} />, title: '3. User Accounts', desc: 'You are responsible for maintaining the confidentiality of your account.' },
+              { id: 't4', icon: <Shield size={16} />, title: '4. Intellectual Property', desc: 'All content and materials in the app are owned by us and protected by law.' },
+              { id: 't5', icon: <File size={16} />, title: '5. Limitation of Liability', desc: 'We are not liable for any indirect or consequential damages.' },
+              { id: 't6', icon: <RefreshCw size={16} />, title: '6. Changes to Terms', desc: 'We may modify these terms at any time. Continued use means acceptance.' }
+            ].map(item => (
+              <button
+                key={item.id}
+                type="button"
+                className={`legal-list-row ${expandedLegalId === item.id ? 'open' : ''}`}
+                onClick={() => setExpandedLegalId(expandedLegalId === item.id ? null : item.id)}
+              >
+                <div className="legal-row-icon tone-orange">{item.icon}</div>
+                <div className="legal-row-copy">
+                  <span className="legal-row-title">{item.title}</span>
+                  <span className="legal-row-desc">{item.desc}</span>
+                </div>
+                <ChevronRight size={16} className="legal-chevron" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 12: HELP CENTER — nursery_app_design */}
+      {activeSubView === 'help_center' && (
+        <div className="animate-fade-in help-screen">
+          <h2 className="legal-screen-title">Help Center & FAQs</h2>
+
+          <div className="help-support-card centered">
+            <div className="help-support-icon circle">
+              <Headset size={20} strokeWidth={2.5} />
+            </div>
+            <strong>Need help or have a question?</strong>
+            <p>We&apos;re here for you! Our support team typically replies within 24-48 hours.</p>
             <button
-              onClick={() => alert('New nursery note dialog!')}
-              className="badge"
-              style={{ background: 'var(--dev-secondary)', color: 'var(--dev-primary)', border: 'none', fontWeight: '700', cursor: 'pointer' }}
+              type="button"
+              className="help-contact-btn solid"
+              onClick={() => alert('Opening Bamudi support: 1-800-BAMUDI')}
             >
-              <Plus size={12} /> Add Note
+              Contact Support <ChevronRight size={16} />
             </button>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-12px' }}>
-            Logged by Mother {authName} for active child {currentBaby.name} ({currentBaby.gender})
-          </p>
 
-          {/* Timeline of nursery logs */}
-          <div className="timeline-container" style={{ '--theme-color': 'var(--dev-primary)' } as React.CSSProperties}>
+          <h4 className="nursery-section-label">Popular Topics</h4>
+          <div className="help-faq-list">
             {[
-              { title: 'Nap Duration Log', desc: '1h 15m (10:00 AM - 11:15 AM). Woke up happy and alert.', time: 'Today 11:15 AM' },
-              { title: 'Breastfeeding Log', desc: '120ml logged. Feeds well without latching issues today.', time: 'Today 08:30 AM' },
-              { title: 'Wet Diaper Checked', desc: 'Logged by Father (Ahmad). Clean skin, no diaper rash.', time: 'Yesterday 09:15 PM' },
-              { title: 'Night Sleep Stretch', desc: 'Slept continuous 6 hours from 10 PM to 4 AM. Good pattern!', time: 'Yesterday 06:00 AM' }
-            ].map((note, index) => (
-              <div key={index} className="timeline-item">
-                <div className="timeline-dot completed"></div>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)' }}>{note.title}</span>
-                    <span style={{ fontSize: '9.5px', color: 'var(--color-text-secondary)' }}>{note.time}</span>
-                  </div>
-                  <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>{note.desc}</p>
+              { icon: <Users size={16} />, q: 'How does real-time co-parent sync work?', a: 'Go to "Invite Partner (Father)", enter their email, and tap Send. Once they install and verify, logs sync automatically between devices.' },
+              { icon: <BarChart2 size={16} />, q: 'How are growth percentiles determined?', a: 'We compare weight, height, and head circumference against WHO Child Growth Standards by age in months and biological sex.' },
+              { icon: <Cloud size={16} />, q: 'Does the tracker support offline logging?', a: 'Yes. Feedings, naps, diapers, and notes save locally. When you reconnect, changes sync to your private cloud container.' },
+              { icon: <File size={16} />, q: 'Can I export logs for pediatrician visits?', a: 'Yes. Inside Growth and Nursery logs you can view history and export a PDF/CSV report to share with clinics.' }
+            ].map((faq, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`help-faq-row ${expandedFaqId === idx ? 'open' : ''}`}
+                onClick={() => setExpandedFaqId(expandedFaqId === idx ? null : idx)}
+              >
+                <div className="help-faq-icon">{faq.icon}</div>
+                <div className="help-faq-copy">
+                  <span className="help-faq-q">{faq.q}</span>
+                  {expandedFaqId === idx && <p className="help-faq-a">{faq.a}</p>}
+                </div>
+                <ChevronDown size={16} className={`legal-chevron ${expandedFaqId === idx ? 'rotated' : ''}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 14: CHANGE PASSWORD — nursery_app_design */}
+      {activeSubView === 'change_password' && (
+        <div className="animate-fade-in password-screen">
+          <h2 className="legal-screen-title">Change Password</h2>
+
+          <div className="password-hero">
+            <div className="password-lock-illu">
+              <div className="password-lock-blur" />
+              <PasswordLockIcon />
+              <span className="legal-sparkle s1 purple">✦</span>
+              <span className="legal-sparkle s2 blue">✦</span>
+            </div>
+          </div>
+
+          <div className="password-form flat">
+            {[
+              { label: 'Current Password', value: oldPassword, set: setOldPassword, show: showOldPass, toggle: () => setShowOldPass(v => !v), placeholder: 'Enter current password' },
+              { label: 'New Password', value: newPassword, set: setNewPassword, show: showNewPass, toggle: () => setShowNewPass(v => !v), placeholder: 'Enter new password' },
+              { label: 'Confirm New Password', value: confirmPassword, set: setConfirmPassword, show: showConfirmPass, toggle: () => setShowConfirmPass(v => !v), placeholder: 'Confirm new password' }
+            ].map(field => (
+              <div key={field.label} className="input-group password-field">
+                <span className="input-label">{field.label}</span>
+                <div className="password-input-wrap">
+                  <input
+                    type={field.show ? 'text' : 'password'}
+                    className="input-field password-input-soft"
+                    value={field.value}
+                    onChange={(e) => field.set(e.target.value)}
+                    placeholder={field.placeholder}
+                  />
+                  <button type="button" className="password-eye" onClick={field.toggle} aria-label="Toggle visibility">
+                    {field.show ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
 
-      {/* VIEW 10: PRIVACY POLICY */}
-      {activeSubView === 'privacy_policy' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Privacy Policy</h2>
-          
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '16px', maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Data Privacy & AES-256 Encryption</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                At Bamudi Compass, your family's data protection is our highest priority. All logged child activities (naps, breastfeeding, diapers), medical details, and pediatrician names are secured using industrial-grade AES-256 local encryption on device storage. Data transmitted to authorized co-parents utilizes SSL/TLS secure pipelines.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. COPPA & Children's Data Protection</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                We strictly adhere to the Children's Online Privacy Protection Act (COPPA). Because the app logs data of children under 13, all information is keyed only under the parent/guardian's credentials. We never collect or request location info, nor do we sell nursery tracking statistics to brokers or advertising networks.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. Camera & Local Gallery Access</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                The Photo Log features require camera and storage library access. These pictures are cached locally on your device and are only stored on our private, secure cloud storage buckets for synchronization if you explicitly activate co-parent checklist features.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>4. GDPR Rights & Record Erasure</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                If you reside in the EU, you have complete rights under the General Data Protection Regulation (GDPR), including data access, correction, portability, and deletion. Deleting a child's profile inside the app immediately wipes all linked growth history, medical timelines, and co-parent logs from all sync systems.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* VIEW 11: TERMS & CONDITIONS */}
-      {activeSubView === 'terms_conditions' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Terms of Service</h2>
-          
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '16px', maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>1. Disclaimer of Medical Guidance</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                Bamudi Compass is a parenting tracking application. All tools—including baby growth tracking percentiles, milestone guides, and immunization scheduler tables—are for general monitoring purposes only. The app does not provide medical diagnostic conclusions and should never replace qualified clinical checkups, pediatrician advice, or emergency services.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>2. Co-Parent Shared Responsibilities</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                When you initiate a co-parent or partner email invitation, you grant them complete editing and deletion privileges to the active child's logs, weight metrics, and system reminder settings. You are responsible for ensuring the invited co-parent credentials are correct and secure.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--color-text-primary)' }}>3. Fair & Proper Use</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginTop: '4px' }}>
-                You agree to use the application solely for tracking your child's nursery routines. Uploading inappropriate media to the Nursery Photo Log or executing automated queries to scraping APIs is strictly prohibited and will trigger immediate account suspension.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* VIEW 12: HELP CENTER & FAQS */}
-      {activeSubView === 'help_center' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Help Center & FAQs</h2>
-
-          {/* Hotline card */}
-          <div style={{ background: 'var(--article-secondary)', color: 'var(--article-primary)', padding: '16px', borderRadius: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '14.5px', fontWeight: '700' }}>Need Tech or Nursery Support?</span>
-            <span style={{ fontSize: '12px', opacity: 0.9 }}>Support representatives are available 24/7 for account setup or data restore issues.</span>
-            <strong style={{ fontSize: '15px', marginTop: '8px', display: 'block' }}>Call Support: 1-800-BAMUDI (226834)</strong>
-          </div>
-
-          {/* Accordion FAQs */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {[
-              { q: 'How does real-time co-parent sync work?', a: 'Go to "Invite Partner (Father)", input their email, and tap "Send". Once they install the app and verify the email, their phone logs sync with yours automatically.' },
-              { q: 'How are growth percentiles determined?', a: 'The app compares baby weight, height, and head circumference entries against standardized Child Growth Reference datasets released by the World Health Organization (WHO) based on age in months and biological gender.' },
-              { q: 'Does the tracker support offline logging?', a: 'Absolutely. Feedings, nap intervals, diaper checks, and notes are logged locally. Once the device reconnects to network coverage, the database syncs changes to the cloud private container.' },
-              { q: 'Can I export logs for pediatrician visits?', a: 'Yes! Inside each log (Growth, Medical, Notes), you can view chronological history. A PDF/CSV export report tool is available directly inside the respective logs to share with clinics.' }
-            ].map((faq, idx) => (
-              <details key={idx} style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '12px 14px', cursor: 'pointer' }}>
-                <summary style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-primary)', outline: 'none' }}>
-                  {faq.q}
-                </summary>
-                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                  {faq.a}
-                </p>
-              </details>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* VIEW 14: CHANGE PASSWORD */}
-      {activeSubView === 'change_password' && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--color-text-primary)' }}>Change Password</h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '-8px' }}>
-            Update your account password for mother profile: {authName}.
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: '18px', border: '1px solid var(--color-border)', padding: '16px', gap: '14px', marginTop: '4px' }}>
-            <div className="input-group">
-              <span className="input-label">Current Password</span>
-              <input
-                type="password"
-                className="input-field"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Enter current password"
-              />
-            </div>
-            
-            <div className="input-group">
-              <span className="input-label">New Password</span>
-              <input
-                type="password"
-                className="input-field"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div className="input-group">
-              <span className="input-label">Confirm New Password</span>
-              <input
-                type="password"
-                className="input-field"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-              />
+            <div className="password-tip rich">
+              <Shield size={18} strokeWidth={2.5} />
+              <div>
+                <strong>Keep your account secure</strong>
+                <p>Use a strong password with at least 8 characters, including numbers and symbols.</p>
+              </div>
             </div>
 
             <button
               type="button"
+              className="password-update-btn"
               onClick={() => {
                 if (!oldPassword || !newPassword || !confirmPassword) {
                   alert('Please fill out all password fields!');
@@ -4305,8 +4694,6 @@ function MoreModule({
                 alert('Password changed successfully!');
                 setActiveSubView('menu');
               }}
-              className="btn-primary"
-              style={{ background: 'var(--mother-primary)', borderRadius: '12px', marginTop: '10px' }}
             >
               Update Password
             </button>
