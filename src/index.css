@@ -1760,7 +1760,6 @@ input:checked + .slider:before {
   margin-right: 2px;
 }
 
-
 /* ========== Bamudi Onboarding (cream / orange) ========== */
 .onboarding-splash {
   background: #FBF6F0 !important;
@@ -2814,4 +2813,28 @@ input:checked + .slider:before {
   box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
   border-radius: 12px;
   margin-top: 8px;
+}
+
+/* Redesigned Pregnancy & Simulator Elements */
+.card-mother {
+  background: linear-gradient(135deg, var(--mother-gradient-start) 0%, var(--mother-gradient-end) 100%) !important;
+  box-shadow: 0 10px 25px rgba(244, 107, 138, 0.25) !important;
+  border: none !important;
+}
+
+.kick-tracker-btn {
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.kick-tracker-btn:active {
+  transform: scale(0.96);
+}
+
+.premium-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
